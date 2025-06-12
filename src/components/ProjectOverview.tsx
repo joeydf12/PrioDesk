@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Project, Task } from '@/pages/Index';
+import { Project, Task } from '@/types';
 import { FolderOpen, CheckSquare, Clock, Calendar } from 'lucide-react';
 
 interface ProjectOverviewProps {
@@ -12,14 +12,14 @@ interface ProjectOverviewProps {
 }
 
 export const ProjectOverview: React.FC<ProjectOverviewProps> = ({ projects, tasks }) => {
-  const getProjectStats = (projectName: string) => {
-    const projectTasks = tasks.filter(task => task.project === projectName);
+  const getProjectStats = (projectId: string) => {
+    const projectTasks = tasks.filter(task => task.project_id === projectId);
     const completed = projectTasks.filter(task => task.status === 'completed').length;
     const total = projectTasks.length;
     const inProgress = projectTasks.filter(task => task.status === 'in-progress').length;
     const overdue = projectTasks.filter(task => {
       const today = new Date();
-      const dueDate = new Date(task.dueDate);
+      const dueDate = new Date(task.due_date);
       return task.status !== 'completed' && dueDate < today;
     }).length;
     
@@ -43,7 +43,7 @@ export const ProjectOverview: React.FC<ProjectOverviewProps> = ({ projects, task
 
       <div className="grid gap-6 md:grid-cols-2">
         {projects.map(project => {
-          const stats = getProjectStats(project.name);
+          const stats = getProjectStats(project.id);
           
           return (
             <Card key={project.id} className="hover:shadow-lg transition-shadow duration-200">

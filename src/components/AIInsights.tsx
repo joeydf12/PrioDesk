@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Brain, AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
-import { Task } from '@/pages/Index';
+import { Task } from '@/types';
 
 interface AIInsightsProps {
   tasks: Task[];
@@ -16,7 +16,7 @@ export const AIInsights: React.FC<AIInsightsProps> = ({ tasks }) => {
     
     // Check for overdue tasks
     const overdueTasks = tasks.filter(task => {
-      const dueDate = new Date(task.dueDate);
+      const dueDate = new Date(task.due_date);
       return task.status !== 'completed' && dueDate < today;
     });
     
@@ -32,7 +32,7 @@ export const AIInsights: React.FC<AIInsightsProps> = ({ tasks }) => {
 
     // Check for old tasks
     const oldTasks = tasks.filter(task => {
-      const createdDate = new Date(task.createdAt);
+      const createdDate = new Date(task.created_at);
       const daysDiff = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
       return task.status !== 'completed' && daysDiff > 7;
     });
@@ -61,8 +61,8 @@ export const AIInsights: React.FC<AIInsightsProps> = ({ tasks }) => {
 
     // Positive insights
     const completedToday = tasks.filter(task => {
-      if (!task.completedAt) return false;
-      const completedDate = new Date(task.completedAt);
+      if (!task.completed_at) return false;
+      const completedDate = new Date(task.completed_at);
       return completedDate.toDateString() === today.toDateString();
     }).length;
 

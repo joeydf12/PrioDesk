@@ -3,66 +3,18 @@ import React, { useState } from 'react';
 import { Header } from '@/components/Header';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskCreationModal } from '@/components/TaskCreationModal';
-import { Task, Project } from './Index';
+import { Task, Project } from '@/types';
 import { CheckSquare } from 'lucide-react';
+import { useTasks } from '@/hooks/useTasks';
+import { useProjects } from '@/hooks/useProjects';
 
 const CompletedTasks = () => {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '3',
-      title: 'Website redesign voltooien',
-      description: 'Nieuwe website layout implementeren',
-      dueDate: '2025-06-10',
-      priority: 'high',
-      effort: 'large',
-      project: 'Website Project',
-      status: 'completed',
-      createdAt: '2025-06-05',
-      completedAt: '2025-06-10'
-    },
-    {
-      id: '4',
-      title: 'Client vergadering voorbereiden',
-      description: 'Presentatie en documenten klaarzetten',
-      dueDate: '2025-06-08',
-      priority: 'medium',
-      effort: 'small',
-      project: 'Client Management',
-      status: 'completed',
-      createdAt: '2025-06-07',
-      completedAt: '2025-06-08'
-    }
-  ]);
-
-  const [projects] = useState<Project[]>([
-    {
-      id: '3',
-      name: 'Website Project',
-      description: 'Complete website vernieuwing',
-      color: 'bg-purple-100 text-purple-800',
-      tasks: [],
-      createdAt: '2025-06-01'
-    },
-    {
-      id: '4',
-      name: 'Client Management',
-      description: 'Client relatie management',
-      color: 'bg-orange-100 text-orange-800',
-      tasks: [],
-      createdAt: '2025-06-03'
-    }
-  ]);
-
+  const { tasks, createTask } = useTasks();
+  const { projects } = useProjects();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
-  const handleTaskCreate = (newTask: Omit<Task, 'id' | 'createdAt' | 'status'>) => {
-    const task: Task = {
-      ...newTask,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      status: 'pending'
-    };
-    setTasks(prev => [...prev, task]);
+  const handleTaskCreate = async (newTask: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    await createTask(newTask);
     setIsTaskModalOpen(false);
   };
 
@@ -95,7 +47,7 @@ const CompletedTasks = () => {
                 task={task}
                 projects={projects}
                 onComplete={() => {}}
-                onStatusChange={() => {}}
+                onTaskStatusChange={() => {}}
               />
             ))}
           </div>

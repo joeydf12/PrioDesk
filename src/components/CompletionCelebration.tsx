@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CheckSquare, Sparkles } from 'lucide-react';
-import { Task } from '@/pages/Index';
+import { Task } from '@/types';
 
 interface CompletionCelebrationProps {
   task: Task | null;

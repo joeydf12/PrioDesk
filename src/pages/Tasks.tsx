@@ -3,76 +3,28 @@ import React, { useState } from 'react';
 import { Header } from '@/components/Header';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskCreationModal } from '@/components/TaskCreationModal';
-import { Task, Project } from './Index';
+import { Task, Project } from '@/types';
+import { useTasks } from '@/hooks/useTasks';
+import { useProjects } from '@/hooks/useProjects';
 
 const Tasks = () => {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '1',
-      title: 'Project voorstel afronden',
-      description: 'Het Q4 project voorstel finaliseren met budgetschattingen',
-      dueDate: '2025-06-15',
-      priority: 'high',
-      effort: 'large',
-      project: 'Q4 Planning',
-      status: 'in-progress',
-      createdAt: '2025-06-10',
-      notes: 'Coördinatie met financieel team nodig'
-    },
-    {
-      id: '2',
-      title: 'Team presentaties beoordelen',
-      description: 'Team presentaties beoordelen en feedback geven',
-      dueDate: '2025-06-13',
-      priority: 'medium',
-      effort: 'medium',
-      project: 'Team Ontwikkeling',
-      status: 'pending',
-      createdAt: '2025-06-11'
-    }
-  ]);
-
-  const [projects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'Q4 Planning',
-      description: 'Strategische planning voor het vierde kwartaal',
-      color: 'bg-blue-100 text-blue-800',
-      tasks: [],
-      createdAt: '2025-06-01'
-    },
-    {
-      id: '2',
-      name: 'Team Ontwikkeling',
-      description: 'Focus op teamgroei en vaardigheidsontwikkeling',
-      color: 'bg-green-100 text-green-800',
-      tasks: [],
-      createdAt: '2025-06-05'
-    }
-  ]);
-
+  const { tasks, createTask, updateTask } = useTasks();
+  const { projects } = useProjects();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
-  const handleTaskComplete = (taskId: string) => {
-    setTasks(prev => prev.map(task => 
-      task.id === taskId ? { ...task, status: 'completed' as const, completedAt: new Date().toISOString() } : task
-    ));
+  const handleTaskComplete = async (taskId: string) => {
+    await updateTask(taskId, { 
+      status: 'completed', 
+      completed_at: new Date().toISOString() 
+    });
   };
 
-  const handleTaskStatusChange = (taskId: string, newStatus: Task['status']) => {
-    setTasks(prev => prev.map(task => 
-      task.id === taskId ? { ...task, status: newStatus } : task
-    ));
+  const handleTaskStatusChange = async (taskId: string, newStatus: Task['status']) => {
+    await updateTask(taskId, { status: newStatus });
   };
 
-  const handleTaskCreate = (newTask: Omit<Task, 'id' | 'createdAt' | 'status'>) => {
-    const task: Task = {
-      ...newTask,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      status: 'pending'
-    };
-    setTasks(prev => [...prev, task]);
+  const handleTaskCreate = async (newTask: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    await createTask(newTask);
     setIsTaskModalOpen(false);
   };
 
@@ -95,7 +47,7 @@ const Tasks = () => {
               task={task}
               projects={projects}
               onComplete={handleTaskComplete}
-              onStatusChange={handleTaskStatusChange}
+              onTaskStatusChange={handleTaskStatusChange}
             />
           ))}
         </div>

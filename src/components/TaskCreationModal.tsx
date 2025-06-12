@@ -6,12 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Task, Project } from '@/pages/Index';
+import { Task, Project } from '@/types';
 
 interface TaskCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateTask: (task: Omit<Task, 'id' | 'createdAt' | 'status'>) => void;
+  onCreateTask: (task: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
   projects: Project[];
 }
 
@@ -24,30 +24,34 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    dueDate: '',
+    due_date: '',
     priority: 'medium' as Task['priority'],
     effort: 'medium' as Task['effort'],
-    project: '',
-    notes: ''
+    project_id: '',
+    notes: '',
+    status: 'pending' as Task['status'],
+    completed_at: null as string | null
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.dueDate || !formData.project) return;
+    if (!formData.title || !formData.due_date || !formData.project_id) return;
 
     onCreateTask(formData);
     setFormData({
       title: '',
       description: '',
-      dueDate: '',
+      due_date: '',
       priority: 'medium',
       effort: 'medium',
-      project: '',
-      notes: ''
+      project_id: '',
+      notes: '',
+      status: 'pending',
+      completed_at: null
     });
   };
 
-  const isFormValid = formData.title && formData.dueDate && formData.project;
+  const isFormValid = formData.title && formData.due_date && formData.project_id;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -86,21 +90,21 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
               <Input
                 id="dueDate"
                 type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
+                value={formData.due_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
                 className="mt-1"
               />
             </div>
 
             <div>
               <Label htmlFor="project">Project *</Label>
-              <Select value={formData.project} onValueChange={(value) => setFormData(prev => ({ ...prev, project: value }))}>
+              <Select value={formData.project_id} onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}>
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Selecteer project" />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map(project => (
-                    <SelectItem key={project.id} value={project.name}>
+                    <SelectItem key={project.id} value={project.id}>
                       {project.name}
                     </SelectItem>
                   ))}

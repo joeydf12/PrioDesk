@@ -3,57 +3,17 @@ import React, { useState } from 'react';
 import { Header } from '@/components/Header';
 import { TaskCreationModal } from '@/components/TaskCreationModal';
 import { ProjectOverview } from '@/components/ProjectOverview';
-import { Task, Project } from './Index';
+import { Task, Project } from '@/types';
+import { useTasks } from '@/hooks/useTasks';
+import { useProjects } from '@/hooks/useProjects';
 
 const Projects = () => {
-  const [tasks] = useState<Task[]>([
-    {
-      id: '1',
-      title: 'Project voorstel afronden',
-      description: 'Het Q4 project voorstel finaliseren met budgetschattingen',
-      dueDate: '2025-06-15',
-      priority: 'high',
-      effort: 'large',
-      project: 'Q4 Planning',
-      status: 'in-progress',
-      createdAt: '2025-06-10'
-    },
-    {
-      id: '2',
-      title: 'Team presentaties beoordelen',
-      description: 'Team presentaties beoordelen en feedback geven',
-      dueDate: '2025-06-13',
-      priority: 'medium',
-      effort: 'medium',
-      project: 'Team Ontwikkeling',
-      status: 'pending',
-      createdAt: '2025-06-11'
-    }
-  ]);
-
-  const [projects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'Q4 Planning',
-      description: 'Strategische planning voor het vierde kwartaal',
-      color: 'bg-blue-100 text-blue-800',
-      tasks: [],
-      createdAt: '2025-06-01'
-    },
-    {
-      id: '2',
-      name: 'Team Ontwikkeling',
-      description: 'Focus op teamgroei en vaardigheidsontwikkeling',
-      color: 'bg-green-100 text-green-800',
-      tasks: [],
-      createdAt: '2025-06-05'
-    }
-  ]);
-
+  const { tasks, createTask } = useTasks();
+  const { projects } = useProjects();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
-  const handleTaskCreate = (newTask: Omit<Task, 'id' | 'createdAt' | 'status'>) => {
-    console.log('New task created:', newTask);
+  const handleTaskCreate = async (newTask: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    await createTask(newTask);
     setIsTaskModalOpen(false);
   };
 

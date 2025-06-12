@@ -17,7 +17,7 @@ export const useTasks = () => {
         .order('due_date', { ascending: true });
 
       if (error) throw error;
-      setTasks(data || []);
+      setTasks(data as Task[] || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -41,7 +41,7 @@ export const useTasks = () => {
         .single();
 
       if (error) throw error;
-      setTasks(prev => [...prev, data]);
+      setTasks(prev => [...prev, data as Task]);
       toast({
         title: "Taak aangemaakt",
         description: "De taak is succesvol toegevoegd.",
@@ -65,7 +65,7 @@ export const useTasks = () => {
         .single();
 
       if (error) throw error;
-      setTasks(prev => prev.map(task => task.id === taskId ? data : task));
+      setTasks(prev => prev.map(task => task.id === taskId ? data as Task : task));
     } catch (error: any) {
       toast({
         title: "Error",
