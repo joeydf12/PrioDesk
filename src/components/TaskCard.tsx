@@ -1,0 +1,152 @@
+
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Task, Project } from '@/pages/Index';
+import { Calendar, CheckSquare, Clock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+
+interface TaskCardProps {
+  task: Task;
+  projects: Project[];
+  onComplete: (taskId: string) => void;
+  onStatusChange: (taskId: string, status: Task['status']) => void;
+  onReschedule?: (taskId: string, newDate: string) => void;
+  showReschedule?: boolean;
+}
+
+export const TaskCard: React.FC<TaskCardProps> = ({
+  task,
+  projects,
+  onComplete,
+  onStatusChange,
+  onReschedule,
+  showReschedule = false
+}) => {
+  const [isRescheduling, setIsRescheduling] = useState(false);
+  const [newDate, setNewDate] = useState(task.dueDate);
+
+  const project = projects.find(p => p.name === task.project);
+  
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-slate-100 text-slate-800 border-slate-200';
+    }
+  };
+
+  const getEffortIcon = (effort: string) => {
+    switch (effort) {
+      case 'small': return '●';
+      case 'medium': return '●●';
+      case 'large': return '●●●';
+      default: return '●';
+    }
+  };
+
+  const handleRescheduleSubmit = () => {
+    if (onReschedule) {
+      onReschedule(task.id, newDate);
+      setIsRescheduling(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const diffTime = date.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tomorrow';
+    if (diffDays === -1) return 'Yesterday';
+    if (diffDays < 0) return `${Math.abs(diffDays)} days overdue`;
+    if (diffDays <= 7) return `In ${diffDays} days`;
+    
+    return date.toLocaleDateString();
+  };
+
+  return (
+    <div className="bg-white rounded-lg border border-slate-200 p-4 hover:shadow-md transition-all duration-200">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <h4 className="font-semibold text-slate-800 mb-1">{task.title}</h4>
+          {task.description && (
+            <p className="text-slate-600 text-sm mb-2">{task.description}</p>
+          )}
+          
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="outline" className={getPriorityColor(task.priority)}>
+              {task.priority} priority
+            </Badge>
+            
+            {project && (
+              <Badge variant="outline" className={project.color}>
+                {project.name}
+              </Badge>
+            )}
+            
+            <span className="text-slate-500 text-sm flex items-center">
+              <Clock className="w-3 h-3 mr-1" />
+              {getEffortIcon(task.effort)} {task.effort}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 ml-4">
+          {task.status !== 'completed' && (
+            <Button
+              size="sm"
+              onClick={() => onComplete(task.id)}
+              className="bg-green-500 hover:bg-green-600 text-white"
+            >
+              <CheckSquare className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center text-slate-600">
+          <Calendar className="w-4 h-4 mr-1" />
+          {isRescheduling ? (
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                value={newDate}
+                onChange={(e) => setNewDate(e.target.value)}
+                className="h-7 text-xs"
+              />
+              <Button size="sm" onClick={handleRescheduleSubmit} className="h-7 px-2 text-xs">
+                Save
+              </Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => setIsRescheduling(false)}
+                className="h-7 px-2 text-xs"
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <span>{formatDate(task.dueDate)}</span>
+          )}
+        </div>
+
+        {showReschedule && !isRescheduling && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => setIsRescheduling(true)}
+            className="text-xs h-7"
+          >
+            Reschedule
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+};
