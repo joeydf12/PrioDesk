@@ -1,131 +1,124 @@
+
 import React, { useState } from 'react';
 import { TaskDashboard } from '@/components/TaskDashboard';
 import { TaskCreationModal } from '@/components/TaskCreationModal';
+import { TaskDetailModal } from '@/components/TaskDetailModal';
 import { Header } from '@/components/Header';
 import { CompletionCelebration } from '@/components/CompletionCelebration';
 import { AIInsights } from '@/components/AIInsights';
-import { ProjectOverview } from '@/components/ProjectOverview';
-
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  dueDate: string;
-  priority: 'low' | 'medium' | 'high';
-  effort: 'small' | 'medium' | 'large';
-  project: string;
-  status: 'pending' | 'in-progress' | 'completed' | 'overdue';
-  createdAt: string;
-  completedAt?: string;
-  notes?: string;
-}
-
-export interface Project {
-  id: string;
-  name: string;
-  description: string;
-  color: string;
-  tasks: Task[];
-  createdAt: string;
-}
+import { Task } from '@/types';
+import { useTasks } from '@/hooks/useTasks';
+import { useProjects } from '@/hooks/useProjects';
+import { Calendar } from 'lucide-react';
 
 const Index = () => {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '1',
-      title: 'Complete project proposal',
-      description: 'Finalize the Q4 project proposal with budget estimates',
-      dueDate: '2025-06-15',
-      priority: 'high',
-      effort: 'large',
-      project: 'Q4 Planning',
-      status: 'in-progress',
-      createdAt: '2025-06-10',
-      notes: 'Need to coordinate with finance team'
-    },
-    {
-      id: '2',
-      title: 'Review team presentations',
-      description: 'Review and provide feedback on the team presentations',
-      dueDate: '2025-06-13',
-      priority: 'medium',
-      effort: 'medium',
-      project: 'Team Development',
-      status: 'pending',
-      createdAt: '2025-06-11'
-    }
-  ]);
-
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'Q4 Planning',
-      description: 'Strategic planning for the fourth quarter',
-      color: 'bg-blue-100 text-blue-800',
-      tasks: [],
-      createdAt: '2025-06-01'
-    },
-    {
-      id: '2',
-      name: 'Team Development',
-      description: 'Focus on team growth and skill development',
-      color: 'bg-green-100 text-green-800',
-      tasks: [],
-      createdAt: '2025-06-05'
-    }
-  ]);
-
+  const { tasks, loading: tasksLoading, createTask, updateTask } = useTasks();
+  const { projects, loading: projectsLoading } = useProjects();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [celebrationTask, setCelebrationTask] = useState<Task | null>(null);
-  const [activeView, setActiveView] = useState<'dashboard' | 'projects'>('dashboard');
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  const handleTaskComplete = (taskId: string) => {
-    setTasks(prev => prev.map(task => {
-      if (task.id === taskId) {
-        const completedTask = { ...task, status: 'completed' as const, completedAt: new Date().toISOString() };
-        setCelebrationTask(completedTask);
-        return completedTask;
-      }
-      return task;
-    }));
+  const loading = tasksLoading || projectsLoading;
+
+  const handleTaskComplete = async (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      await updateTask(taskId, { 
+        status: 'completed', 
+        completed_at: new Date().toISOString() 
+      });
+      setCelebrationTask({ ...task, status: 'completed', completed_at: new Date().toISOString() });
+    }
   };
 
-  const handleTaskStatusChange = (taskId: string, newStatus: Task['status']) => {
-    setTasks(prev => prev.map(task => 
-      task.id === taskId ? { ...task, status: newStatus } : task
-    ));
+  const handleTaskStatusChange = async (taskId: string, newStatus: Task['status']) => {
+    await updateTask(taskId, { status: newStatus });
   };
 
-  const handleTaskCreate = (newTask: Omit<Task, 'id' | 'createdAt' | 'status'>) => {
-    const task: Task = {
-      ...newTask,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      status: 'pending'
-    };
-    setTasks(prev => [...prev, task]);
+  const handleTaskCreate = async (newTask: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    await createTask(newTask);
     setIsTaskModalOpen(false);
   };
 
-  const handleTaskReschedule = (taskId: string, newDate: string) => {
-    setTasks(prev => prev.map(task => 
-      task.id === taskId ? { ...task, dueDate: newDate, status: 'pending' } : task
-    ));
+  const handleTaskReschedule = async (taskId: string, newDate: string) => {
+    await updateTask(taskId, { due_date: newDate, status: 'pending' });
   };
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+  };
+
+  // Get today's tasks
+  const today = new Date().toISOString().split('T')[0];
+  const todaysTasks = tasks.filter(task => task.due_date === today && task.status !== 'completed');
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header onCreateTask={() => setIsTaskModalOpen(true)} />
       
-      <main className="container mx-auto px-4 py-8 space-y-8">
+      <main className="container mx-auto px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        {/* Today's Date and Tasks Section */}
+        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-slate-200">
+          <div className="flex items-center mb-4">
+            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-600" />
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800">
+              Vandaag - {new Date().toLocaleDateString('nl-NL', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </h2>
+          </div>
+          
+          {todaysTasks.length === 0 ? (
+            <div className="text-center py-6 sm:py-8">
+              <Calendar className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold text-slate-600 mb-2">Geen taken voor vandaag</h3>
+              <p className="text-sm sm:text-base text-slate-500">Je hebt alle taken afgerond of er staan geen taken gepland!</p>
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:gap-4">
+              {todaysTasks.map(task => (
+                <div key={task.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <h4 className="font-semibold text-blue-800 text-sm sm:text-base mb-1">{task.title}</h4>
+                  {task.description && (
+                    <p className="text-blue-700 text-xs sm:text-sm mb-2 line-clamp-2">{task.description}</p>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-blue-600 text-xs sm:text-sm font-medium">
+                      Prioriteit: {task.priority} • Inspanning: {task.effort}
+                    </span>
+                    <button
+                      onClick={() => handleTaskClick(task)}
+                      className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium"
+                    >
+                      Bekijk details →
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <AIInsights tasks={tasks} />
         
         <TaskDashboard 
           tasks={tasks}
           projects={projects}
           onTaskComplete={handleTaskComplete}
-          onStatusChange={handleTaskStatusChange}
+          onTaskStatusChange={handleTaskStatusChange}
           onReschedule={handleTaskReschedule}
+          onTaskClick={handleTaskClick}
         />
       </main>
 
@@ -134,6 +127,13 @@ const Index = () => {
         onClose={() => setIsTaskModalOpen(false)}
         onCreateTask={handleTaskCreate}
         projects={projects}
+      />
+
+      <TaskDetailModal
+        task={selectedTask}
+        projects={projects}
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
       />
 
       <CompletionCelebration
