@@ -1,15 +1,18 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, CheckSquare, FolderOpen } from 'lucide-react';
+import { Plus, CheckSquare, FolderOpen, Calendar, Clock } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 interface HeaderProps {
   onCreateTask: () => void;
-  activeView: 'dashboard' | 'projects';
-  onViewChange: (view: 'dashboard' | 'projects') => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onCreateTask, activeView, onViewChange }) => {
+export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
+  const location = useLocation();
+  
+  const isActive = (path: string) => location.pathname === path;
+
   return (
     <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -25,24 +28,56 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask, activeView, onView
             </div>
             
             <nav className="flex items-center space-x-2 ml-8">
-              <Button
-                variant={activeView === 'dashboard' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => onViewChange('dashboard')}
-                className="transition-all duration-200"
-              >
-                <CheckSquare className="w-4 h-4 mr-2" />
-                Tasks
-              </Button>
-              <Button
-                variant={activeView === 'projects' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => onViewChange('projects')}
-                className="transition-all duration-200"
-              >
-                <FolderOpen className="w-4 h-4 mr-2" />
-                Projects
-              </Button>
+              <Link to="/">
+                <Button
+                  variant={isActive('/') ? 'default' : 'ghost'}
+                  size="sm"
+                  className="transition-all duration-200"
+                >
+                  <CheckSquare className="w-4 h-4 mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Link to="/tasks">
+                <Button
+                  variant={isActive('/tasks') ? 'default' : 'ghost'}
+                  size="sm"
+                  className="transition-all duration-200"
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  Taken
+                </Button>
+              </Link>
+              <Link to="/completed">
+                <Button
+                  variant={isActive('/completed') ? 'default' : 'ghost'}
+                  size="sm"
+                  className="transition-all duration-200"
+                >
+                  <CheckSquare className="w-4 h-4 mr-2" />
+                  Afgerond
+                </Button>
+              </Link>
+              <Link to="/planning">
+                <Button
+                  variant={isActive('/planning') ? 'default' : 'ghost'}
+                  size="sm"
+                  className="transition-all duration-200"
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Planning
+                </Button>
+              </Link>
+              <Link to="/projects">
+                <Button
+                  variant={isActive('/projects') ? 'default' : 'ghost'}
+                  size="sm"
+                  className="transition-all duration-200"
+                >
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                  Projecten
+                </Button>
+              </Link>
             </nav>
           </div>
 
@@ -51,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask, activeView, onView
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Task
+            Taak Toevoegen
           </Button>
         </div>
       </div>

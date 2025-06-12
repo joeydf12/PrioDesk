@@ -53,28 +53,28 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Create New Task</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Nieuwe Taak Aanmaken</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Task Title *</Label>
+            <Label htmlFor="title">Taak Titel *</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Enter task title"
+              placeholder="Voer taak titel in"
               className="mt-1"
             />
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Beschrijving</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Describe the task (optional)"
+              placeholder="Beschrijf de taak (optioneel)"
               className="mt-1"
               rows={3}
             />
@@ -82,7 +82,7 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="dueDate">Due Date *</Label>
+              <Label htmlFor="dueDate">Deadline *</Label>
               <Input
                 id="dueDate"
                 type="date"
@@ -96,7 +96,7 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
               <Label htmlFor="project">Project *</Label>
               <Select value={formData.project} onValueChange={(value) => setFormData(prev => ({ ...prev, project: value }))}>
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select project" />
+                  <SelectValue placeholder="Selecteer project" />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map(project => (
@@ -111,41 +111,41 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority">Prioriteit</Label>
               <Select value={formData.priority} onValueChange={(value: Task['priority']) => setFormData(prev => ({ ...prev, priority: value }))}>
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="low">Laag</SelectItem>
+                  <SelectItem value="medium">Gemiddeld</SelectItem>
+                  <SelectItem value="high">Hoog</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="effort">Effort Level</Label>
+              <Label htmlFor="effort">Inspanning</Label>
               <Select value={formData.effort} onValueChange={(value: Task['effort']) => setFormData(prev => ({ ...prev, effort: value }))}>
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="small">Small (● 1-2h)</SelectItem>
-                  <SelectItem value="medium">Medium (●● 3-6h)</SelectItem>
-                  <SelectItem value="large">Large (●●● 1+ day)</SelectItem>
+                  <SelectItem value="small">Klein (● 1-2u)</SelectItem>
+                  <SelectItem value="medium">Gemiddeld (●● 3-6u)</SelectItem>
+                  <SelectItem value="large">Groot (●●● 1+ dag)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div>
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">Notities</Label>
             <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="Additional notes (optional)"
+              placeholder="Extra notities (optioneel)"
               className="mt-1"
               rows={2}
             />
@@ -153,14 +153,14 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
 
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              Annuleren
             </Button>
             <Button 
               type="submit" 
               disabled={!isFormValid}
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
             >
-              Create Task
+              Taak Aanmaken
             </Button>
           </div>
         </form>

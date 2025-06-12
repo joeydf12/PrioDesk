@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { TaskDashboard } from '@/components/TaskDashboard';
 import { TaskCreationModal } from '@/components/TaskCreationModal';
@@ -116,29 +115,18 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <Header 
-        onCreateTask={() => setIsTaskModalOpen(true)}
-        activeView={activeView}
-        onViewChange={setActiveView}
-      />
+      <Header onCreateTask={() => setIsTaskModalOpen(true)} />
       
       <main className="container mx-auto px-4 py-8 space-y-8">
         <AIInsights tasks={tasks} />
         
-        {activeView === 'dashboard' ? (
-          <TaskDashboard 
-            tasks={tasks}
-            projects={projects}
-            onTaskComplete={handleTaskComplete}
-            onTaskStatusChange={handleTaskStatusChange}
-            onTaskReschedule={handleTaskReschedule}
-          />
-        ) : (
-          <ProjectOverview 
-            projects={projects}
-            tasks={tasks}
-          />
-        )}
+        <TaskDashboard 
+          tasks={tasks}
+          projects={projects}
+          onTaskComplete={handleTaskComplete}
+          onStatusChange={handleTaskStatusChange}
+          onReschedule={handleTaskReschedule}
+        />
       </main>
 
       <TaskCreationModal

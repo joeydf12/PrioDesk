@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Task, Project } from '@/pages/Index';
-import { Calendar, CheckSquare, Clock } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface TaskCardProps {
@@ -59,11 +60,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     const diffTime = date.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Tomorrow';
-    if (diffDays === -1) return 'Yesterday';
-    if (diffDays < 0) return `${Math.abs(diffDays)} days overdue`;
-    if (diffDays <= 7) return `In ${diffDays} days`;
+    if (diffDays === 0) return 'Vandaag';
+    if (diffDays === 1) return 'Morgen';
+    if (diffDays === -1) return 'Gisteren';
+    if (diffDays < 0) return `${Math.abs(diffDays)} dagen te laat`;
+    if (diffDays <= 7) return `Over ${diffDays} dagen`;
     
     return date.toLocaleDateString();
   };
@@ -71,40 +72,44 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-4 hover:shadow-md transition-all duration-200">
       <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h4 className="font-semibold text-slate-800 mb-1">{task.title}</h4>
-          {task.description && (
-            <p className="text-slate-600 text-sm mb-2">{task.description}</p>
-          )}
+        <div className="flex items-start space-x-3 flex-1">
+          <div className="mt-1">
+            <Checkbox
+              checked={task.status === 'completed'}
+              onCheckedChange={() => {
+                if (task.status !== 'completed') {
+                  onComplete(task.id);
+                }
+              }}
+              className="w-5 h-5"
+            />
+          </div>
           
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="outline" className={getPriorityColor(task.priority)}>
-              {task.priority} priority
-            </Badge>
-            
-            {project && (
-              <Badge variant="outline" className={project.color}>
-                {project.name}
-              </Badge>
+          <div className="flex-1">
+            <h4 className={`font-semibold text-slate-800 mb-1 ${task.status === 'completed' ? 'line-through text-slate-500' : ''}`}>
+              {task.title}
+            </h4>
+            {task.description && (
+              <p className="text-slate-600 text-sm mb-2">{task.description}</p>
             )}
             
-            <span className="text-slate-500 text-sm flex items-center">
-              <Clock className="w-3 h-3 mr-1" />
-              {getEffortIcon(task.effort)} {task.effort}
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                {task.priority} prioriteit
+              </Badge>
+              
+              {project && (
+                <Badge variant="outline" className={project.color}>
+                  {project.name}
+                </Badge>
+              )}
+              
+              <span className="text-slate-500 text-sm flex items-center">
+                <Clock className="w-3 h-3 mr-1" />
+                {getEffortIcon(task.effort)} {task.effort}
+              </span>
+            </div>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2 ml-4">
-          {task.status !== 'completed' && (
-            <Button
-              size="sm"
-              onClick={() => onComplete(task.id)}
-              className="bg-green-500 hover:bg-green-600 text-white"
-            >
-              <CheckSquare className="w-4 h-4" />
-            </Button>
-          )}
         </div>
       </div>
 
@@ -120,7 +125,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 className="h-7 text-xs"
               />
               <Button size="sm" onClick={handleRescheduleSubmit} className="h-7 px-2 text-xs">
-                Save
+                Opslaan
               </Button>
               <Button 
                 size="sm" 
@@ -128,7 +133,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 onClick={() => setIsRescheduling(false)}
                 className="h-7 px-2 text-xs"
               >
-                Cancel
+                Annuleren
               </Button>
             </div>
           ) : (
@@ -136,14 +141,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           )}
         </div>
 
-        {showReschedule && !isRescheduling && (
+        {showReschedule && !isRescheduling && task.status !== 'completed' && (
           <Button 
             size="sm" 
             variant="outline" 
             onClick={() => setIsRescheduling(true)}
             className="text-xs h-7"
           >
-            Reschedule
+            Herplannen
           </Button>
         )}
       </div>
