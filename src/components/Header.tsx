@@ -12,7 +12,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+
   const isActive = (path: string) => location.pathname === path;
 
   const handleSignOut = async () => {
@@ -21,6 +21,13 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
 
   const navItems = [
     { path: '/', icon: CheckSquare, label: 'Dashboard' },
+    { path: '/tasks', icon: Clock, label: 'Taken' },
+    { path: '/completed', icon: CheckSquare, label: 'Afgerond' },
+    { path: '/planning', icon: Calendar, label: 'Planning' },
+    { path: '/projects', icon: FolderOpen, label: 'Projecten' },
+  ];
+
+  const navItemsMobile = [
     { path: '/tasks', icon: Clock, label: 'Taken' },
     { path: '/completed', icon: CheckSquare, label: 'Afgerond' },
     { path: '/planning', icon: Calendar, label: 'Planning' },
@@ -40,7 +47,7 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
                 TaskMind AI
               </h1>
             </div>
-            
+
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-2 ml-8">
               {navItems.map(({ path, icon: Icon, label }) => (
@@ -60,6 +67,17 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
 
           <div className="flex items-center space-x-2">
             {/* Mobile Menu Button */}
+
+            {/* Create Task Button */}
+            <Button
+              onClick={onCreateTask}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-xs sm:text-sm"
+              size="sm"
+            >
+              <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Taak Toevoegen</span>
+              <span className="sm:hidden">Toevoegen</span>
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -72,27 +90,6 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
                 <Menu className="w-5 h-5" />
               )}
             </Button>
-
-            {/* Create Task Button */}
-            <Button
-              onClick={onCreateTask}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-xs sm:text-sm"
-              size="sm"
-            >
-              <Plus className="w-4 h-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Taak Toevoegen</span>
-              <span className="sm:hidden">Toevoegen</span>
-            </Button>
-
-            {/* Sign Out Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="hidden sm:flex"
-            >
-              <LogOut className="w-4 h-4" />
-            </Button>
           </div>
         </div>
 
@@ -100,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
         {isMobileMenuOpen && (
           <div className="lg:hidden mt-4 pb-4 border-t border-slate-200 pt-4">
             <nav className="grid grid-cols-2 gap-2">
-              {navItems.map(({ path, icon: Icon, label }) => (
+              {navItemsMobile.map(({ path, icon: Icon, label }) => (
                 <Link key={path} to={path} onClick={() => setIsMobileMenuOpen(false)}>
                   <Button
                     variant={isActive(path) ? 'default' : 'ghost'}
@@ -112,15 +109,6 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
                   </Button>
                 </Link>
               ))}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSignOut}
-                className="w-full justify-start col-span-2"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Uitloggen
-              </Button>
             </nav>
           </div>
         )}

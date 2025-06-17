@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,9 +23,9 @@ export const AIInsights: React.FC<AIInsightsProps> = ({ tasks }) => {
       insights.push({
         type: 'warning',
         icon: AlertTriangle,
-        title: 'Attention Needed',
-        message: `You have ${overdueTasks.length} overdue task${overdueTasks.length > 1 ? 's' : ''}. Consider rescheduling or breaking them into smaller parts.`,
-        action: 'Review overdue tasks'
+        title: 'Aandacht Nodig',
+        message: `Je hebt ${overdueTasks.length} te late ${overdueTasks.length > 1 ? 'taken' : 'taak'}. Overweeg om ze te herplannen of op te splitsen in kleinere delen.`,
+        action: 'Bekijk te late taken'
       });
     }
 
@@ -41,9 +40,9 @@ export const AIInsights: React.FC<AIInsightsProps> = ({ tasks }) => {
       insights.push({
         type: 'info',
         icon: Calendar,
-        title: 'Stagnant Tasks Detected',
-        message: `${oldTasks.length} task${oldTasks.length > 1 ? 's have' : ' has'} been open for over a week. Consider breaking them down or reassessing priority.`,
-        action: 'Review old tasks'
+        title: 'Stagnerende Taken Gedetecteerd',
+        message: `${oldTasks.length} ${oldTasks.length > 1 ? 'taken staan' : 'taak staat'} al meer dan een week open. Overweeg om ze op te splitsen of de prioriteit te herzien.`,
+        action: 'Bekijk oude taken'
       });
     }
 
@@ -53,9 +52,9 @@ export const AIInsights: React.FC<AIInsightsProps> = ({ tasks }) => {
       insights.push({
         type: 'warning',
         icon: TrendingUp,
-        title: 'Heavy High-Priority Workload',
-        message: `You have ${highPriorityTasks} high-priority tasks. Consider focusing on 2-3 key items to maintain quality.`,
-        action: 'Optimize priorities'
+        title: 'Hoge Werkdruk',
+        message: `Je hebt ${highPriorityTasks} hoge-prioriteit taken. Focus op 2-3 belangrijke items om de kwaliteit te behouden.`,
+        action: 'Optimaliseer prioriteiten'
       });
     }
 
@@ -70,9 +69,9 @@ export const AIInsights: React.FC<AIInsightsProps> = ({ tasks }) => {
       insights.push({
         type: 'success',
         icon: TrendingUp,
-        title: 'Great Progress Today!',
-        message: `You've completed ${completedToday} task${completedToday > 1 ? 's' : ''} today. Keep up the momentum!`,
-        action: 'View achievements'
+        title: 'Goede Voortgang Vandaag!',
+        message: `Je hebt vandaag ${completedToday} ${completedToday > 1 ? 'taken' : 'taak'} afgerond. Ga zo door!`,
+        action: 'Bekijk prestaties'
       });
     }
 
@@ -88,8 +87,8 @@ export const AIInsights: React.FC<AIInsightsProps> = ({ tasks }) => {
           <div className="flex items-center space-x-3">
             <Brain className="w-6 h-6 text-green-600" />
             <div>
-              <h3 className="font-semibold text-green-800">All Good!</h3>
-              <p className="text-green-700 text-sm">Your tasks are well-organized. Keep up the great work!</p>
+              <h3 className="font-semibold text-green-800">Alles in Orde!</h3>
+              <p className="text-green-700 text-sm">Je taken zijn goed georganiseerd. Ga zo door!</p>
             </div>
           </div>
         </CardContent>
@@ -102,7 +101,7 @@ export const AIInsights: React.FC<AIInsightsProps> = ({ tasks }) => {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center space-x-2 text-lg">
           <Brain className="w-5 h-5 text-blue-600" />
-          <span>AI Insights</span>
+          <span>AI Inzichten</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
