@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { TaskDashboard } from '@/components/TaskDashboard';
 import { TaskCreationModal } from '@/components/TaskCreationModal';
@@ -9,7 +8,7 @@ import { AIInsights } from '@/components/AIInsights';
 import { Task } from '@/types';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
-import { Calendar } from 'lucide-react';
+import { Calendar, Sparkles } from 'lucide-react';
 
 const Index = () => {
   const { tasks, loading: tasksLoading, createTask, updateTask } = useTasks();
@@ -23,9 +22,9 @@ const Index = () => {
   const handleTaskComplete = async (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
-      await updateTask(taskId, { 
-        status: 'completed', 
-        completed_at: new Date().toISOString() 
+      await updateTask(taskId, {
+        status: 'completed',
+        completed_at: new Date().toISOString()
       });
       setCelebrationTask({ ...task, status: 'completed', completed_at: new Date().toISOString() });
     }
@@ -63,63 +62,81 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header onCreateTask={() => setIsTaskModalOpen(true)} />
-      
+
       <main className="container mx-auto px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        {/* Tip of the day */}
+        <div className="p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+          <h4 className="text-sm font-semibold text-blue-800 mb-2 flex items-center">
+            <Sparkles className="w-4 h-4 mr-2 text-blue-600" />
+            Tip van de dag
+          </h4>
+          <p className="text-sm text-blue-700">
+            Begin je dag met de belangrijkste taak. Door eerst de moeilijkste taak aan te pakken,
+            bouw je momentum op voor de rest van de dag.
+          </p>
+        </div>
+        
         {/* Today's Date and Tasks Section */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-slate-200">
-          <div className="flex items-center mb-4">
-            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-600" />
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-800">
-              Vandaag - {new Date().toLocaleDateString('nl-NL', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </h2>
-          </div>
-          
-          {todaysTasks.length === 0 ? (
-            <div className="text-center py-6 sm:py-8">
-              <Calendar className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-              <h3 className="text-base sm:text-lg font-semibold text-slate-600 mb-2">Geen taken voor vandaag</h3>
-              <p className="text-sm sm:text-base text-slate-500">Je hebt alle taken afgerond of er staan geen taken gepland!</p>
+        <div className="flex flex-col gap-6 w-full sm:flex-row sm:items-start">
+          <div className={`bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-slate-200 ${!tasks.some(task => {
+            const today = new Date();
+            const dueDate = new Date(task.due_date);
+            return task.status !== 'completed' && dueDate < today;
+          }) ? 'w-full' : ''}`}>
+            <div className="flex items-center mb-4">
+              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-600" />
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-800">
+                Vandaag - {new Date().toLocaleDateString('nl-NL', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </h2>
             </div>
-          ) : (
-            <div className="grid gap-3 sm:gap-4">
-              {todaysTasks.map(task => (
-                <div key={task.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <h4 className="font-semibold text-blue-800 text-sm sm:text-base mb-1">{task.title}</h4>
-                  {task.description && (
-                    <p className="text-blue-700 text-xs sm:text-sm mb-2 line-clamp-2">{task.description}</p>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <span className="text-blue-600 text-xs sm:text-sm font-medium">
-                      Prioriteit: {task.priority} • Inspanning: {task.effort}
-                    </span>
-                    <button
-                      onClick={() => handleTaskClick(task)}
-                      className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium"
-                    >
-                      Bekijk details →
-                    </button>
+
+            {todaysTasks.length === 0 ? (
+              <div className="text-center py-6 sm:py-8">
+                <Calendar className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+                <h3 className="text-base sm:text-lg font-semibold text-slate-600 mb-2">Geen taken voor vandaag</h3>
+                <p className="text-sm sm:text-base text-slate-500">Je hebt alle taken afgerond of er staan geen taken gepland!</p>
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:gap-4">
+                {todaysTasks.map(task => (
+                  <div key={task.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <h4 className="font-semibold text-blue-800 text-sm sm:text-base mb-1">{task.title}</h4>
+                    {task.description && (
+                      <p className="text-blue-700 text-xs sm:text-sm mb-2 line-clamp-2">{task.description}</p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-blue-600 text-xs sm:text-sm font-medium">
+                        Prioriteit: {task.priority} • Inspanning: {task.effort}
+                      </span>
+                      <button
+                        onClick={() => handleTaskClick(task)}
+                        className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium"
+                      >
+                        Bekijk details →
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
+
+          <TaskDashboard
+            tasks={tasks}
+            projects={projects}
+            onTaskComplete={handleTaskComplete}
+            onTaskStatusChange={handleTaskStatusChange}
+            onReschedule={handleTaskReschedule}
+            onTaskClick={handleTaskClick}
+          />
         </div>
 
         <AIInsights tasks={tasks} />
-        
-        <TaskDashboard 
-          tasks={tasks}
-          projects={projects}
-          onTaskComplete={handleTaskComplete}
-          onTaskStatusChange={handleTaskStatusChange}
-          onReschedule={handleTaskReschedule}
-          onTaskClick={handleTaskClick}
-        />
       </main>
 
       <TaskCreationModal

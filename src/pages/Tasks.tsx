@@ -28,10 +28,13 @@ const Tasks = () => {
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
 
   const handleTaskComplete = async (taskId: string) => {
-    await updateTask(taskId, { 
-      status: 'completed', 
-      completed_at: new Date().toISOString() 
-    });
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      await updateTask(taskId, {
+        status: task.status === 'completed' ? 'pending' : 'completed',
+        completed_at: task.status === 'completed' ? null : new Date().toISOString()
+      });
+    }
   };
 
   const handleTaskStatusChange = async (taskId: string, newStatus: Task['status']) => {
