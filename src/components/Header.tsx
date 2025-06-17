@@ -47,11 +47,15 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 sm:space-x-4">
             <div className="flex items-center space-x-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              </div>
+              <Link to="/">
+                <img
+                  src="/src/images/logopriodesk.png"
+                  alt="PrioDesk Logo"
+                  className="w-9 h-8 sm:w-10 sm:h-10 object-contain cursor-pointer"
+                />
+              </Link>
               <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                TaskMind AI
+                PrioDesk
               </h1>
             </div>
 
