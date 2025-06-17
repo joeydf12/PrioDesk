@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Header } from '@/components/Header';
 import { TaskCard } from '@/components/TaskCard';
@@ -9,13 +8,27 @@ import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 
 const CompletedTasks = () => {
-  const { tasks, createTask } = useTasks();
+  const { tasks, createTask, updateTask } = useTasks();
   const { projects } = useProjects();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   const handleTaskCreate = async (newTask: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     await createTask(newTask);
     setIsTaskModalOpen(false);
+  };
+
+  const handleTaskComplete = async (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      await updateTask(taskId, {
+        status: task.status === 'completed' ? 'pending' : 'completed',
+        completed_at: task.status === 'completed' ? null : new Date().toISOString()
+      });
+    }
+  };
+
+  const handleTaskStatusChange = async (taskId: string, newStatus: Task['status']) => {
+    await updateTask(taskId, { status: newStatus });
   };
 
   const completedTasks = tasks.filter(task => task.status === 'completed');
@@ -46,8 +59,8 @@ const CompletedTasks = () => {
                 key={task.id}
                 task={task}
                 projects={projects}
-                onComplete={() => {}}
-                onTaskStatusChange={() => {}}
+                onComplete={handleTaskComplete}
+                onTaskStatusChange={handleTaskStatusChange}
               />
             ))}
           </div>
