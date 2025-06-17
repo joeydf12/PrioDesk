@@ -1,11 +1,14 @@
 import React from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { Header } from '@/components/Header';
+import { MobileNav } from '@/components/MobileNav';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, Settings, User } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
+import { LogOut, User, Mail, Calendar } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -20,65 +23,67 @@ const Profile = () => {
     }
   };
 
-  const getInitials = (email: string) => {
-    return email.slice(0, 2).toUpperCase();
-  };
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profiel</CardTitle>
-            <CardDescription>Beheer je account instellingen</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={user?.user_metadata?.avatar_url} />
-                <AvatarFallback>{getInitials(user?.email || '')}</AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="text-lg font-medium">{user?.email}</h3>
-                <p className="text-sm text-muted-foreground">Gebruiker</p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <Header onCreateTask={() => {}} />
+      
+      <main className="container mx-auto px-4 py-8 pb-24">
+        <div className="max-w-2xl mx-auto">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-slate-800 mb-2 flex items-center">
+              <User className="w-8 h-8 mr-3 text-blue-600" />
+              Profiel
+            </h1>
+            <p className="text-slate-600">Beheer je account instellingen</p>
+          </div>
 
-            <div className="grid gap-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <User className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Account Informatie</p>
-                    <p className="text-sm text-muted-foreground">Bekijk en beheer je account gegevens</p>
-                  </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Informatie</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mailadres</Label>
+                <div className="flex items-center space-x-2">
+                  <Mail className="w-4 h-4 text-slate-400" />
+                  <Input
+                    id="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="bg-slate-50"
+                  />
                 </div>
-                <Button variant="ghost" size="sm">
-                  <Settings className="h-4 w-4" />
-                </Button>
               </div>
 
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <LogOut className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Uitloggen</p>
-                    <p className="text-sm text-muted-foreground">Log uit van je account</p>
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="created">Account aangemaakt op</Label>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="w-4 h-4 text-slate-400" />
+                  <Input
+                    id="created"
+                    value={user?.created_at ? new Date(user.created_at).toLocaleDateString('nl-NL') : ''}
+                    disabled
+                    className="bg-slate-50"
+                  />
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+              </div>
+
+              <div className="pt-4">
+                <Button
+                  variant="destructive"
                   onClick={handleSignOut}
-                  className="hover:bg-red-50 hover:text-red-600"
+                  className="w-full sm:w-auto"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Uitloggen
                 </Button>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+
+      <MobileNav />
     </div>
   );
 };

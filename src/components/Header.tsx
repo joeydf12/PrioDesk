@@ -1,9 +1,16 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, CheckSquare, FolderOpen, Calendar, Clock, Menu, X, LogOut } from 'lucide-react';
+import { Plus, CheckSquare, FolderOpen, Calendar, Clock, Menu, X, LogOut, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   onCreateTask: () => void;
@@ -66,8 +73,6 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* Mobile Menu Button */}
-
             {/* Create Task Button */}
             <Button
               onClick={onCreateTask}
@@ -78,6 +83,44 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
               <span className="hidden sm:inline">Taak Toevoegen</span>
               <span className="sm:hidden">Toevoegen</span>
             </Button>
+
+            {/* Profile Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end">
+                <DropdownMenuLabel>Mijn Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profiel</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/tasks" className="flex items-center">
+                    <Clock className="mr-2 h-4 w-4" />
+                    <span>Taken</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/planning" className="flex items-center">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    <span>Planning</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Uitloggen</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Mobile Menu Button */}
             <Button
               variant="ghost"
               size="sm"
