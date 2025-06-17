@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Task, Project } from '@/types';
-import { Calendar, Clock, ChevronRight, Sparkles, CheckCircle2, Upload, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, Clock, ChevronRight, Sparkles, CheckCircle2, Upload, ChevronDown, ChevronUp, FileText, Image, MessageSquare } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +21,7 @@ interface TaskCardProps {
   isOverdue?: boolean;
   isSelected?: boolean;
   onSelect?: (taskId: string) => void;
+  onUpload?: (type: 'file' | 'image' | 'text', content: string, analysis: string) => void;
 }
 
 // Priority scoring system
@@ -43,12 +44,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   isOverdue,
   isSelected,
   onSelect,
+  onUpload,
 }) => {
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [newDate, setNewDate] = useState(task.due_date);
   const [isAiRescheduling, setIsAiRescheduling] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
   const { toast } = useToast();
 
   const project = projects.find(p => p.id === task.project_id);
@@ -145,11 +148,53 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  const handleUpload = (type: 'file' | 'image' | 'text', content: File | string) => {
-    // Here you would typically handle the upload to your backend
-    console.log('Upload type:', type);
-    console.log('Content:', content);
-    // You can add your upload logic here
+  const handleUpload = (type: 'file' | 'image' | 'text', content: string, analysis: string) => {
+    onUpload(type, content, analysis);
+    setIsUploadDialogOpen(false);
+  };
+
+  const formatAnalysis = (analysis: string) => {
+    // Split the analysis into sections
+    const sections = analysis.split('**').filter(Boolean);
+    
+    return (
+      <div className="space-y-4">
+        {sections.map((section, index) => {
+          // Check if this is a header (ends with ":")
+          const isHeader = section.trim().endsWith(':');
+          const content = section.trim().replace(/:$/, '');
+          
+          if (isHeader) {
+            return (
+              <div key={index} className="space-y-2">
+                <h4 className="font-semibold text-sm">{content}</h4>
+              </div>
+            );
+          }
+          
+          // Split content into bullet points if it contains "*"
+          if (content.includes('*')) {
+            const points = content.split('*').filter(Boolean);
+            return (
+              <ul key={index} className="list-disc pl-4 space-y-1">
+                {points.map((point, pointIndex) => (
+                  <li key={pointIndex} className="text-sm text-muted-foreground">
+                    {point.trim()}
+                  </li>
+                ))}
+              </ul>
+            );
+          }
+          
+          // Regular paragraph
+          return (
+            <p key={index} className="text-sm text-muted-foreground">
+              {content}
+            </p>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
@@ -329,6 +374,55 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 Upload bijlage
               </Button>
             </div>
+
+            {task.analysis && (
+              <div className="mt-4 border rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setShowAnalysis(!showAnalysis)}
+                  className="w-full p-3 bg-gray-50 hover:bg-gray-100 flex items-center justify-between text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-500" />
+                    <span className="font-medium text-gray-700">AI Analyse</span>
+                  </div>
+                  {showAnalysis ? (
+                    <ChevronUp className="w-4 h-4 text-gray-500" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                  )}
+                </button>
+                
+                {showAnalysis && (
+                  <div className="p-4 bg-white">
+                    <div className="prose prose-sm max-w-none">
+                      {formatAnalysis(task.analysis)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {task.attachments && task.attachments.length > 0 && (
+              <div className="mt-4 space-y-4">
+                <h4 className="text-sm font-medium text-muted-foreground">Attachments</h4>
+                {task.attachments.map((attachment) => (
+                  <div key={attachment.id} className="bg-muted rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      {attachment.type === 'file' && <FileText className="w-4 h-4" />}
+                      {attachment.type === 'image' && <Image className="w-4 h-4" />}
+                      {attachment.type === 'text' && <MessageSquare className="w-4 h-4" />}
+                      <span className="text-sm font-medium capitalize">{attachment.type}</span>
+                    </div>
+                    {attachment.analysis && (
+                      <div className="mt-2">
+                        <h5 className="text-sm font-medium mb-2">Analysis</h5>
+                        {formatAnalysis(attachment.analysis)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -337,6 +431,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         isOpen={isUploadDialogOpen}
         onClose={() => setIsUploadDialogOpen(false)}
         onUpload={handleUpload}
+        taskId={task.id}
       />
     </Card>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskCreationModal } from '@/components/TaskCreationModal';
@@ -17,15 +17,27 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { taskAttachmentService } from '@/services/taskAttachmentService';
+import { supabase } from '@/lib/supabase';
+import { toast } from "@/components/ui/use-toast";
+import { useAuth } from '@/contexts/AuthContext';
 
 const Tasks = () => {
-  const { tasks, createTask, updateTask } = useTasks();
+  const { tasks: initialTasks, createTask, updateTask } = useTasks();
   const { projects } = useProjects();
+  const { user } = useAuth();
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [isDayFilterOpen, setIsDayFilterOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
+  const [activeTab, setActiveTab] = useState('all');
+
+  useEffect(() => {
+    if (user) {
+      fetchTasks();
+    }
+  }, [user]);
 
   const handleTaskComplete = async (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -96,6 +108,35 @@ const Tasks = () => {
 
   const clearDayFilters = () => {
     setSelectedDays([]);
+  };
+
+  const fetchTasks = async () => {
+    try {
+      const { data: tasks, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('due_date', { ascending: true });
+
+      if (error) throw error;
+
+      // Fetch attachments for each task
+      const tasksWithAttachments = await Promise.all(
+        tasks.map(async (task) => {
+          const attachments = await taskAttachmentService.getTaskAttachments(task.id);
+          return { ...task, attachments };
+        })
+      );
+
+      setTasks(tasksWithAttachments);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch tasks",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
