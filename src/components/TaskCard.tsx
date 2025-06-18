@@ -55,7 +55,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const { toast } = useToast();
 
   const project = projects.find(p => p.id === task.project_id);
-  
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'bg-red-100 text-red-800 border-red-200';
@@ -92,7 +92,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     if (diffDays === -1) return 'Gisteren';
     if (diffDays < 0) return `${Math.abs(diffDays)} dagen te laat`;
     if (diffDays <= 7) return `Over ${diffDays} dagen`;
-    
+
     return date.toLocaleDateString();
   };
 
@@ -112,7 +112,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     try {
       // Simuleer AI suggestie
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const today = new Date();
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -161,14 +161,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const formatAnalysis = (analysis: string) => {
     // Split the analysis into sections
     const sections = analysis.split('**').filter(Boolean);
-    
+
     return (
       <div className="space-y-4">
         {sections.map((section, index) => {
           // Check if this is a header (ends with ":")
           const isHeader = section.trim().endsWith(':');
           const content = section.trim().replace(/:$/, '');
-          
+
           if (isHeader) {
             return (
               <div key={index} className="space-y-2">
@@ -176,7 +176,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </div>
             );
           }
-          
+
           // Split content into bullet points if it contains "*"
           if (content.includes('*')) {
             const points = content.split('*').filter(Boolean);
@@ -190,7 +190,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </ul>
             );
           }
-          
+
           // Regular paragraph
           return (
             <p key={index} className="text-sm text-muted-foreground">
@@ -204,7 +204,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
   return (
     <Card className={`relative ${isOverdue ? 'border-red-500' : ''} ${isSelected ? 'ring-2 ring-primary' : ''}`}>
-      <div 
+      <div
         className="p-3 sm:p-4 cursor-pointer"
         onClick={handleCardClick}
       >
@@ -216,25 +216,25 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             {task.description && (
               <p className="text-slate-600 text-xs sm:text-sm mb-2 line-clamp-2">{task.description}</p>
             )}
-            
+
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
               <Badge variant="outline" className={`${getPriorityColor(task.priority)} text-xs`}>
                 {task.priority}
               </Badge>
-              
+
               {project && (
                 <Badge variant="outline" className={`${project.color} text-xs`}>
                   {project.name}
                 </Badge>
               )}
-              
+
               <span className="text-slate-500 text-xs flex items-center">
                 <Clock className="w-3 h-3 mr-1" />
                 {getEffortIcon(task.effort)} {task.effort}
               </span>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Button
               size="sm"
@@ -243,11 +243,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 e.stopPropagation();
                 onComplete(task.id);
               }}
-              className={`h-7 px-2 text-xs ${
-                task.status === 'completed' 
-                  ? 'bg-green-600 hover:bg-green-700' 
+              className={`h-7 px-2 text-xs ${task.status === 'completed'
+                  ? 'bg-green-600 hover:bg-green-700'
                   : 'border-slate-200 hover:border-slate-300'
-              }`}
+                }`}
             >
               <CheckCircle2 className="w-4 h-4 mr-1" />
               {task.status === 'completed' ? 'Terugzetten' : 'Afronden'}
@@ -280,9 +279,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 <Button size="sm" onClick={handleRescheduleSubmit} className="h-7 px-2 text-xs">
                   Opslaan
                 </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
+                <Button
+                  size="sm"
+                  variant="ghost"
                   onClick={() => setIsRescheduling(false)}
                   className="h-7 px-2 text-xs"
                 >
@@ -290,7 +289,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 </Button>
               </div>
             ) : (
-              <span className="text-xs sm:text-sm">{formatDate(task.due_date)}</span>
+              <span className="text-xs sm:text-sm">
+                {task.planned_date ? (
+                  <>
+                    <span className="text-blue-600">Gepland: {formatDate(task.planned_date)}</span>
+                    <span className="text-slate-400 ml-2">(Deadline: {formatDate(task.due_date)})</span>
+                  </>
+                ) : (
+                  formatDate(task.due_date)
+                )}
+              </span>
             )}
           </div>
         </div>
@@ -370,7 +378,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     <ChevronDown className="w-4 h-4 text-gray-500" />
                   )}
                 </button>
-                
+
                 {showAnalysis && (
                   <div className="p-4 bg-white">
                     <div className="prose prose-sm max-w-none">

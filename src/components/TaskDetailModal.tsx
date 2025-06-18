@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -101,6 +100,16 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               </div>
             </div>
 
+            {task.planned_date && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-700">Gepland op</span>
+                <div className="flex items-center text-blue-600 text-sm">
+                  <Calendar className="w-3 h-3 mr-1" />
+                  {formatDate(task.planned_date)}
+                </div>
+              </div>
+            )}
+
             {project && (
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-700">Project</span>
@@ -114,13 +123,13 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               <span className="text-sm font-medium text-slate-700">Status</span>
               <Badge variant="outline" className={
                 task.status === 'completed' ? 'bg-green-100 text-green-800' :
-                task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                task.status === 'overdue' ? 'bg-red-100 text-red-800' :
-                'bg-slate-100 text-slate-800'
+                  task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                    task.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                      'bg-slate-100 text-slate-800'
               }>
                 {task.status === 'completed' ? 'Afgerond' :
-                 task.status === 'in-progress' ? 'Bezig' :
-                 task.status === 'overdue' ? 'Te laat' : 'Gepland'}
+                  task.status === 'in-progress' ? 'Bezig' :
+                    task.status === 'overdue' ? 'Te laat' : 'Gepland'}
               </Badge>
             </div>
           </div>

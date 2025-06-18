@@ -35,12 +35,12 @@ const Planning = () => {
       const isCurrentlyCompleted = task.status === 'completed';
       const newStatus = isCurrentlyCompleted ? 'pending' : 'completed';
       const completedAt = isCurrentlyCompleted ? null : new Date().toISOString();
-      
+
       await updateTask(taskId, {
         status: newStatus,
         completed_at: completedAt
       });
-      
+
       // Only show celebration when completing a task (not when uncompleting)
       if (!isCurrentlyCompleted) {
         setCelebrationTask({ ...task, status: 'completed', completed_at: completedAt });
@@ -69,7 +69,10 @@ const Planning = () => {
 
   const getTasksForDate = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
-    return tasks.filter(task => task.due_date === dateString && task.status !== 'completed');
+    return tasks.filter(task => {
+      const taskDate = task.planned_date || task.due_date;
+      return taskDate === dateString && task.status !== 'completed';
+    });
   };
 
   const weekDays = getWeekDays(currentWeek);
@@ -121,7 +124,7 @@ const Planning = () => {
           </div>
 
           <div className="flex items-center justify-between mb-6 gap-4">
-              <Button variant="outline" onClick={previousWeek} className="text-xs sm:text-sm">
+            <Button variant="outline" onClick={previousWeek} className="text-xs sm:text-sm">
               <ChevronLeft className="w-4 h-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Vorige week</span>
               <span className="sm:hidden">Vorige</span>

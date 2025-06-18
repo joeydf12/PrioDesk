@@ -34,7 +34,10 @@ export const DayPlanningModal: React.FC<DayPlanningModalProps> = ({
 }) => {
   if (!date) return null;
 
-  const dayTasks = tasks.filter(task => task.due_date === date.toISOString().split('T')[0]);
+  const dayTasks = tasks.filter(task => {
+    const taskDate = task.planned_date || task.due_date;
+    return taskDate === date.toISOString().split('T')[0];
+  });
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('nl-NL', {

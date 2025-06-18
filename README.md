@@ -180,4 +180,4 @@ Dit project is gelicenseerd onder de MIT License - zie het [LICENSE](LICENSE) be
 
 ---
 
-**Gemaakt met ❤️ en ☕ door Max Arnouts & Joey de Fijter**
+**Gemaakt door Max Arnouts & Joey de Fijter**
