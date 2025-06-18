@@ -66,7 +66,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
   };
 
   const handleTaskSelect = (taskId: string) => {
-    setSelectedOverdueTasks(prev => 
+    setSelectedOverdueTasks(prev =>
       prev.includes(taskId)
         ? prev.filter(id => id !== taskId)
         : [...prev, taskId]
@@ -75,12 +75,12 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
 
   const handleBulkReschedule = () => {
     if (!selectedDate) return;
-    
+
     const newDate = selectedDate.toISOString();
     selectedOverdueTasks.forEach(taskId => {
       onReschedule(taskId, newDate);
     });
-    
+
     setSelectedOverdueTasks([]);
     setIsCalendarOpen(false);
   };
@@ -92,57 +92,61 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
     try {
       // Simuleer AI suggestie
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const today = new Date();
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
-      const dayAfterTomorrow = new Date(today);
-      dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
-
-      // Bereken hoeveel taken er al voor morgen en overmorgen gepland staan
-      const tasksForTomorrow = tasks.filter(task => 
-        new Date(task.due_date).toDateString() === tomorrow.toDateString() &&
-        task.status !== 'completed'
-      );
-
-      const tasksForDayAfterTomorrow = tasks.filter(task => 
-        new Date(task.due_date).toDateString() === dayAfterTomorrow.toDateString() &&
-        task.status !== 'completed'
-      );
-
-      // Bereken de totale prioriteitsscore voor morgen en overmorgen
-      const tomorrowScore = tasksForTomorrow.reduce((total, task) => 
-        total + (PRIORITY_SCORES[task.priority as keyof typeof PRIORITY_SCORES] || 1), 0
-      );
-
-      const dayAfterTomorrowScore = tasksForDayAfterTomorrow.reduce((total, task) => 
-        total + (PRIORITY_SCORES[task.priority as keyof typeof PRIORITY_SCORES] || 1), 0
-      );
 
       // Sorteer de geselecteerde taken op prioriteit (hoog naar laag)
       const selectedTasks = selectedOverdueTasks
         .map(taskId => tasks.find(t => t.id === taskId))
         .filter((task): task is Task => task !== undefined)
-        .sort((a, b) => 
-          (PRIORITY_SCORES[b.priority as keyof typeof PRIORITY_SCORES] || 1) - 
+        .sort((a, b) =>
+          (PRIORITY_SCORES[b.priority as keyof typeof PRIORITY_SCORES] || 1) -
           (PRIORITY_SCORES[a.priority as keyof typeof PRIORITY_SCORES] || 1)
         );
 
-      // Verdeel de taken over morgen en overmorgen
-      selectedTasks.forEach(task => {
+      // Voor elke taak, zoek de eerste beschikbare dag
+      for (const task of selectedTasks) {
         const taskScore = PRIORITY_SCORES[task.priority as keyof typeof PRIORITY_SCORES] || 1;
-        
-        // Als de score voor morgen + deze taak nog onder de dagelijkse capaciteit blijft
-        if (tomorrowScore + taskScore <= dailyTaskCapacity) { // Max score per dag is 2 * capacity
-          onReschedule(task.id, tomorrow.toISOString());
-        } else {
-          onReschedule(task.id, dayAfterTomorrow.toISOString());
+
+        // Begin vanaf morgen en zoek de eerste beschikbare dag
+        let currentDate = new Date(tomorrow);
+        let foundDate = false;
+
+        // Zoek maximaal 30 dagen vooruit
+        for (let i = 0; i < 30 && !foundDate; i++) {
+          // Bereken hoeveel taken er al voor deze dag gepland staan
+          const tasksForDay = tasks.filter(t => {
+            const taskDate = t.planned_date || t.due_date;
+            return new Date(taskDate).toDateString() === currentDate.toDateString() &&
+              t.status !== 'completed';
+          });
+
+          // Bereken de totale prioriteitsscore voor deze dag
+          const dayScore = tasksForDay.reduce((total, t) =>
+            total + (PRIORITY_SCORES[t.priority as keyof typeof PRIORITY_SCORES] || 1), 0
+          );
+
+          // Als er nog ruimte is voor deze taak op deze dag
+          if (dayScore + taskScore <= dailyTaskCapacity) {
+            onReschedule(task.id, currentDate.toISOString());
+            foundDate = true;
+          } else {
+            // Ga naar de volgende dag
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
         }
-      });
+
+        // Als er geen beschikbare dag gevonden is binnen 30 dagen, plan dan op de laatste gecontroleerde dag
+        if (!foundDate) {
+          onReschedule(task.id, currentDate.toISOString());
+        }
+      }
 
       toast({
         title: "Taken herpland",
-        description: `AI heeft de taken verdeeld over morgen en overmorgen, rekening houdend met prioriteiten en een maximum van ${dailyTaskCapacity} taken per dag.`,
+        description: "AI heeft de taken verdeeld over beschikbare dagen, rekening houdend met prioriteiten en dagelijkse capaciteit.",
       });
 
       setSelectedOverdueTasks([]);
@@ -184,7 +188,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex flex-col gap-3">
                 <div className="flex items-center space-x-2 bg-white/50 rounded-lg px-3 py-2 border border-red-200 w-fit">
                   <Checkbox
@@ -200,15 +204,15 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
                     Selecteer alles
                   </label>
                 </div>
-                
+
                 {selectedOverdueTasks.length > 0 && (
                   <div className="flex flex-row gap-2">
                     <div className="flex flex-row sm:flex-row gap-2 w-full">
                       <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                         <PopoverTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="bg-white hover:bg-red-50 border-red-200 hover:border-red-300 text-red-800 w-full justify-center"
                           >
                             <Calendar className="h-4 w-4 mr-2" />
@@ -223,9 +227,9 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
                             initialFocus
                           />
                           <div className="p-3 border-t">
-                            <Button 
+                            <Button
                               style={{ backgroundColor: '#263354' }}
-                              className="w-full shadow-sm" 
+                              className="w-full shadow-sm"
                               onClick={handleBulkReschedule}
                               disabled={!selectedDate}
                             >
@@ -250,7 +254,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
                 )}
               </div>
             </div>
-            
+
             <div className="space-y-3 sm:space-y-4">
               {overdueTasks.map(task => (
                 <div key={task.id} className="flex items-start gap-3 group">

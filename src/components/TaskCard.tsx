@@ -21,7 +21,7 @@ interface TaskCardProps {
   isOverdue?: boolean;
   isSelected?: boolean;
   onSelect?: (taskId: string) => void;
-  onUpload?: (type: 'file' | 'image' | 'text', content: string, analysis: string) => void;
+  onUpload?: (taskId: string, type: 'file' | 'image' | 'text', content: string, analysis: string) => void;
 }
 
 // Priority scoring system
@@ -149,8 +149,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   };
 
   const handleUpload = (type: 'file' | 'image' | 'text', content: string, analysis: string) => {
-    onUpload(type, content, analysis);
+    if (onUpload) {
+      onUpload(task.id, type, content, analysis);
+    }
     setIsUploadDialogOpen(false);
+    // Force a re-render by updating local state
+    setShowAnalysis(false);
+    setIsExpanded(true); // Keep expanded to show the new attachment
   };
 
   const formatAnalysis = (analysis: string) => {

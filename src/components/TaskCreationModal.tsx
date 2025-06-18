@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,8 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
     project_id: '',
     notes: '',
     status: 'pending' as Task['status'],
-    completed_at: null as string | null
+    completed_at: null as string | null,
+    planned_date: null as string | null
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -47,7 +47,8 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
       project_id: '',
       notes: '',
       status: 'pending',
-      completed_at: null
+      completed_at: null,
+      planned_date: null
     });
   };
 
@@ -55,116 +56,112 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Nieuwe Taak Aanmaken</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">Nieuwe taak aanmaken</DialogTitle>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="title">Taak Titel *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Voer taak titel in"
-              className="mt-1"
-            />
-          </div>
 
-          <div>
-            <Label htmlFor="description">Beschrijving</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Beschrijf de taak (optioneel)"
-              className="mt-1"
-              rows={3}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
             <div>
-              <Label htmlFor="dueDate">Deadline *</Label>
+              <Label htmlFor="title">Titel *</Label>
               <Input
-                id="dueDate"
-                type="date"
-                value={formData.due_date}
-                onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 className="mt-1"
+                placeholder="Wat moet er gedaan worden?"
               />
             </div>
 
             <div>
-              <Label htmlFor="project">Project *</Label>
-              <Select value={formData.project_id} onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Selecteer project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map(project => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="description">Beschrijving</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="mt-1"
+                placeholder="Voeg details toe over de taak..."
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="dueDate">Deadline *</Label>
+                <Input
+                  id="dueDate"
+                  type="date"
+                  value={formData.due_date}
+                  onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="plannedDate">Inplannen op</Label>
+                <Input
+                  id="plannedDate"
+                  type="date"
+                  value={formData.planned_date || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, planned_date: e.target.value }))}
+                  className="mt-1"
+                />
+                <p className="text-xs text-slate-500 mt-1">Optioneel: wanneer wil je deze taak uitvoeren?</p>
+              </div>
+
+              <div>
+                <Label htmlFor="project">Project *</Label>
+                <Select value={formData.project_id} onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecteer project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map(project => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="priority">Prioriteit *</Label>
+                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecteer prioriteit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Laag</SelectItem>
+                    <SelectItem value="medium">Gemiddeld</SelectItem>
+                    <SelectItem value="high">Hoog</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="effort">Inspanning *</Label>
+                <Select value={formData.effort} onValueChange={(value) => setFormData(prev => ({ ...prev, effort: value }))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecteer inspanning" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Klein</SelectItem>
+                    <SelectItem value="medium">Gemiddeld</SelectItem>
+                    <SelectItem value="large">Groot</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="priority">Prioriteit</Label>
-              <Select value={formData.priority} onValueChange={(value: Task['priority']) => setFormData(prev => ({ ...prev, priority: value }))}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Laag</SelectItem>
-                  <SelectItem value="medium">Gemiddeld</SelectItem>
-                  <SelectItem value="high">Hoog</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="effort">Inspanning</Label>
-              <Select value={formData.effort} onValueChange={(value: Task['effort']) => setFormData(prev => ({ ...prev, effort: value }))}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="small">Klein (● 1-2u)</SelectItem>
-                  <SelectItem value="medium">Gemiddeld (●● 3-6u)</SelectItem>
-                  <SelectItem value="large">Groot (●●● 1+ dag)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="notes">Notities</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="Extra notities (optioneel)"
-              className="mt-1"
-              rows={2}
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onClose}>
               Annuleren
             </Button>
-            <Button 
-              type="submit" 
-              disabled={!isFormValid}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-            >
-              Taak Aanmaken
+            <Button type="submit" disabled={!isFormValid}>
+              Taak aanmaken
             </Button>
           </div>
         </form>
