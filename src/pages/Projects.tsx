@@ -44,6 +44,11 @@ const Projects = () => {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectDescription, setNewProjectDescription] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProjects();
@@ -78,27 +83,40 @@ const Projects = () => {
       setProjects(projectsWithTasks);
     } catch (error) {
       console.error('Error fetching projects:', error);
+      setError('Er is een fout opgetreden bij het ophalen van de projecten');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCreateProject = async (name: string, description: string) => {
+  const handleCreateProject = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setError('Gebruiker niet ingelogd');
+        return;
+      }
+
+      const { error: createError } = await supabase
         .from('projects')
         .insert([
           {
-            name,
-            description,
-            user_id: user?.id,
-          },
-        ])
-        .select();
+            name: newProjectName,
+            description: newProjectDescription,
+            user_id: user.id
+          }
+        ]);
 
-      if (error) throw error;
+      if (createError) throw createError;
 
-      await fetchProjects();
+      setNewProjectName('');
+      setNewProjectDescription('');
+      setIsCreateProjectOpen(false);
+      fetchProjects();
     } catch (error) {
       console.error('Error creating project:', error);
+      setError('Er is een fout opgetreden bij het aanmaken van het project');
     }
   };
 
@@ -205,31 +223,15 @@ const Projects = () => {
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
                           <Label htmlFor="projectName">Project naam</Label>
-                          <Input id="projectName" placeholder="Voer project naam in" />
+                          <Input id="projectName" placeholder="Voer project naam in" value={newProjectName} onChange={(e) => setNewProjectName(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="projectDescription">Beschrijving</Label>
-                          <Input id="projectDescription" placeholder="Voer project beschrijving in" />
+                          <Input id="projectDescription" placeholder="Voer project beschrijving in" value={newProjectDescription} onChange={(e) => setNewProjectDescription(e.target.value)} />
                         </div>
                         <Button
                           className="w-full"
-                          onClick={async () => {
-                            const nameInput = document.getElementById('projectName') as HTMLInputElement;
-                            const descInput = document.getElementById('projectDescription') as HTMLInputElement;
-                            if (nameInput && descInput) {
-                              try {
-                                await handleCreateProject(nameInput.value, descInput.value);
-                                // Close dialog and refresh
-                                const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
-                                if (closeButton) closeButton.click();
-                                // Clear inputs
-                                nameInput.value = '';
-                                descInput.value = '';
-                              } catch (error) {
-                                console.error('Error creating project:', error);
-                              }
-                            }
-                          }}
+                          onClick={handleCreateProject}
                         >
                           Project aanmaken
                         </Button>

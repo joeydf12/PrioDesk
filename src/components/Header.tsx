@@ -11,6 +11,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface HeaderProps {
   onCreateTask: () => void;
@@ -19,6 +25,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -80,7 +87,7 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
             {/* Create Task Button */}
             <Button
               onClick={onCreateTask}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-xs sm:text-sm"
+              className="bg-[#293365] hover:bg-[#1f2547] text-white shadow-lg hover:shadow-xl transition-all duration-200 text-xs sm:text-sm"
               size="sm"
             >
               <Plus className="w-4 h-4 mr-1 sm:mr-2" />
@@ -160,6 +167,14 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
           </div>
         )}
       </div>
+
+      <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
+        <DialogContent className="sm:max-w-[600px] bg-white">
+          <DialogHeader>
+            <DialogTitle>Nieuwe taak toevoegen</DialogTitle>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 };
