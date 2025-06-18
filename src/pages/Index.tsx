@@ -63,6 +63,13 @@ const Index = () => {
   // Get today's tasks
   const today = new Date().toISOString().split('T')[0];
   const todaysTasks = tasks.filter(task => task.due_date === today && task.status !== 'completed');
+  
+  // Get overdue tasks to determine if TaskDashboard should be shown
+  const overdueTasks = tasks.filter(task => {
+    const today = new Date();
+    const dueDate = new Date(task.due_date);
+    return task.status !== 'completed' && dueDate < today;
+  });
 
   if (loading) {
     return (
@@ -90,8 +97,8 @@ const Index = () => {
         </div>
         
         {/* Today's Date and Tasks Section */}
-        <div className="flex flex-col gap-6 w-full sm:flex-row sm:items-start">
-          <div className={`bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-slate-200 w-full mb-4 sm:mb-0`}>
+        <div className={`flex flex-col gap-6 w-full ${overdueTasks.length > 0 ? 'sm:flex-row sm:items-start' : ''}`}>
+          <div className={`bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-slate-200 ${overdueTasks.length > 0 ? 'w-full sm:w-1/2' : 'w-full'}`}>
             <div className="flex items-center mb-4">
               <h2 className="text-lg sm:text-xl font-semibold text-slate-800">
                 Vandaag - {new Date().toLocaleDateString('nl-NL', {
@@ -134,17 +141,19 @@ const Index = () => {
             )}
           </div>
 
-          <div className="w-full sm:w-[400px]">
-            <TaskDashboard
-              tasks={tasks}
-              projects={projects}
-              onTaskComplete={handleTaskComplete}
-              onTaskStatusChange={handleTaskStatusChange}
-              onReschedule={handleTaskReschedule}
-              onTaskClick={handleTaskClick}
-              onUpload={handleTaskUpload}
-            />
-          </div>
+          {overdueTasks.length > 0 && (
+            <div className="w-full sm:w-1/2">
+              <TaskDashboard
+                tasks={tasks}
+                projects={projects}
+                onTaskComplete={handleTaskComplete}
+                onTaskStatusChange={handleTaskStatusChange}
+                onReschedule={handleTaskReschedule}
+                onTaskClick={handleTaskClick}
+                onUpload={handleTaskUpload}
+              />
+            </div>
+          )}
         </div>
 
         <div className="w-full">

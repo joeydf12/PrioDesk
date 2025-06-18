@@ -162,7 +162,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-4 w-full h-full">
       {/* { Stats } */}
       {/* <TaskStats 
         totalTasks={tasks.length}
@@ -171,9 +171,9 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
         inProgressTasks={inProgressTasks.length}
       /> */}
 
-      <div className="w-full">
+      <div className="w-full h-full">
         {overdueTasks.length > 0 && (
-          <div className="bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200 rounded-xl p-3 sm:p-6 shadow-sm overflow-y-auto max-h-[400px]">
+          <div className="bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200 rounded-xl p-3 sm:p-6 shadow-sm overflow-y-auto h-full">
             <div className="flex flex-col gap-4 mb-4 sm:mb-6 sticky top-0 bg-red-50/80 backdrop-blur-sm z-10 pb-3 sm:pb-4 border-b border-red-200">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-100 flex-shrink-0">
