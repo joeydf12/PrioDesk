@@ -1,5 +1,5 @@
 # PrioDesk
-
+  
 [![React](https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react&logoColor=black)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-5.4.1-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
@@ -9,7 +9,7 @@
 [![shadcn/ui](https://img.shields.io/badge/shadcn/ui-0.0.0-000000?logo=shadcnui&logoColor=white)](https://ui.shadcn.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-Een intelligente taakplanner met AI-ondersteuning voor het beheren van taken, projecten en planning. Gebouwd met moderne webtechnologieën en geïntegreerd met Google's Generative AI voor slimme taakanalyse en herplanning.
+Een intelligente taakplanner met AI-ondersteuning voor het beheren van taken , projecten en planning. Gebouwd met moderne webtechnologieën en geïntegreerd met Google's Generative AI voor slimme taakanalyse en herplanning.
 
 ## ✨ Features
 
