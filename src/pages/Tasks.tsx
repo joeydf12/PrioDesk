@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskCreationModal } from '@/components/TaskCreationModal';
+import { CompletionCelebration } from '@/components/CompletionCelebration';
 import { Task, Project } from '@/types';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
@@ -24,7 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Tasks = () => {
   const { tasks: initialTasks, createTask, updateTask } = useTasks();
-  const { projects } = useProjects();
+  const { projects, loading: projectsLoading } = useProjects();
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -32,6 +33,7 @@ const Tasks = () => {
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [isDayFilterOpen, setIsDayFilterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('active');
+  const [celebrationTask, setCelebrationTask] = useState<Task | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -42,10 +44,21 @@ const Tasks = () => {
   const handleTaskComplete = async (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
+      const isCurrentlyCompleted = task.status === 'completed';
+      const newStatus = isCurrentlyCompleted ? 'pending' : 'completed';
+      const completedAt = isCurrentlyCompleted ? null : new Date().toISOString();
+      
       await updateTask(taskId, {
-        status: task.status === 'completed' ? 'pending' : 'completed',
-        completed_at: task.status === 'completed' ? null : new Date().toISOString()
+        status: newStatus,
+        completed_at: completedAt
       });
+      
+      // Only show celebration when completing a task (not when uncompleting)
+      if (!isCurrentlyCompleted) {
+        setCelebrationTask({ ...task, status: 'completed', completed_at: completedAt });
+      }
+      
+      await fetchTasks(); // Refresh the tasks to update the UI
     }
   };
 
@@ -336,6 +349,11 @@ const Tasks = () => {
         onClose={() => setIsTaskModalOpen(false)}
         onCreateTask={handleTaskCreate}
         projects={projects}
+      />
+
+      <CompletionCelebration
+        task={celebrationTask}
+        onClose={() => setCelebrationTask(null)}
       />
     </div>
   );

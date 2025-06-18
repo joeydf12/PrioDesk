@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Header } from '@/components/Header';
 import { TaskCreationModal } from '@/components/TaskCreationModal';
 import { DayPlanningModal } from '@/components/DayPlanningModal';
+import { CompletionCelebration } from '@/components/CompletionCelebration';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { Calendar, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MobileNav } from '@/components/MobileNav';
 import { useNavigate } from 'react-router-dom';
+import { Task } from '@/types';
 
 const Planning = () => {
   const { tasks, loading: tasksLoading, createTask, updateTask } = useTasks();
@@ -17,6 +19,7 @@ const Planning = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isDayModalOpen, setIsDayModalOpen] = useState(false);
+  const [celebrationTask, setCelebrationTask] = useState<Task | null>(null);
   const navigate = useNavigate();
 
   const loading = tasksLoading || projectsLoading;
@@ -27,10 +30,22 @@ const Planning = () => {
   };
 
   const handleTaskComplete = async (taskId: string) => {
-    await updateTask(taskId, {
-      status: 'completed',
-      completed_at: new Date().toISOString()
-    });
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      const isCurrentlyCompleted = task.status === 'completed';
+      const newStatus = isCurrentlyCompleted ? 'pending' : 'completed';
+      const completedAt = isCurrentlyCompleted ? null : new Date().toISOString();
+      
+      await updateTask(taskId, {
+        status: newStatus,
+        completed_at: completedAt
+      });
+      
+      // Only show celebration when completing a task (not when uncompleting)
+      if (!isCurrentlyCompleted) {
+        setCelebrationTask({ ...task, status: 'completed', completed_at: completedAt });
+      }
+    }
   };
 
   const handleTaskStatusChange = async (taskId: string, newStatus: any) => {
@@ -195,6 +210,11 @@ const Planning = () => {
         onClose={() => setIsDayModalOpen(false)}
         onTaskComplete={handleTaskComplete}
         onTaskStatusChange={handleTaskStatusChange}
+      />
+
+      <CompletionCelebration
+        task={celebrationTask}
+        onClose={() => setCelebrationTask(null)}
       />
 
       <MobileNav />

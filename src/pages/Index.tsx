@@ -22,11 +22,19 @@ const Index = () => {
   const handleTaskComplete = async (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
+      const isCurrentlyCompleted = task.status === 'completed';
+      const newStatus = isCurrentlyCompleted ? 'pending' : 'completed';
+      const completedAt = isCurrentlyCompleted ? null : new Date().toISOString();
+      
       await updateTask(taskId, {
-        status: 'completed',
-        completed_at: new Date().toISOString()
+        status: newStatus,
+        completed_at: completedAt
       });
-      setCelebrationTask({ ...task, status: 'completed', completed_at: new Date().toISOString() });
+      
+      // Only show celebration when completing a task (not when uncompleting)
+      if (!isCurrentlyCompleted) {
+        setCelebrationTask({ ...task, status: 'completed', completed_at: completedAt });
+      }
     }
   };
 
