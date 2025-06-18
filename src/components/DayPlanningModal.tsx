@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -71,6 +70,7 @@ export const DayPlanningModal: React.FC<DayPlanningModalProps> = ({
                   onComplete={onTaskComplete}
                   onTaskStatusChange={onTaskStatusChange}
                   onTaskClick={onTaskClick}
+                  tasks={tasks}
                 />
               ))}
             </div>

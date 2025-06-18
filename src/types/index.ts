@@ -5,6 +5,7 @@ export interface Task {
   title: string;
   description?: string;
   due_date: string;
+  planned_date?: string;
   priority: 'low' | 'medium' | 'high';
   effort: 'small' | 'medium' | 'large';
   status: 'pending' | 'in-progress' | 'completed' | 'overdue';
