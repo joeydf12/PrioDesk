@@ -178,12 +178,6 @@ Dit project is gelicenseerd onder de MIT License - zie het [LICENSE](LICENSE) be
 - [Google AI](https://ai.google.dev/) voor de AI integratie
 - [Tailwind CSS](https://tailwindcss.com/) voor de styling utilities
 
-## 📞 Support
-
-Voor vragen of ondersteuning, neem contact op via:
-- Email: [your-email@example.com]
-- GitHub Issues: [Project Issues](https://github.com/your-username/task-whisper-ai-planner/issues)
-
 ---
 
-**Gemaakt met ❤️ en ☕ door [Jouw Naam]**
+**Gemaakt met ❤️ en ☕ door [Max Arnouts & Joey de Fijter]**
