@@ -54,8 +54,59 @@ const Tasks = () => {
   };
 
   const handleTaskCreate = async (newTask: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    await createTask(newTask);
-    setIsTaskModalOpen(false);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Niet ingelogd');
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([{ ...newTask, user_id: user.id }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      // Fetch attachments for the new task
+      const attachments = await taskAttachmentService.getTaskAttachments(data.id);
+      const taskWithAttachments = { ...data, attachments };
+      
+      setTasks(prev => [...prev, taskWithAttachments]);
+      setIsTaskModalOpen(false);
+      
+      toast({
+        title: "Taak aangemaakt",
+        description: "De taak is succesvol toegevoegd.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Kon taak niet aanmaken: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpload = async (taskId: string, type: 'file' | 'image' | 'text', content: string, analysis: string) => {
+    try {
+      // Refresh the specific task with its attachments
+      const attachments = await taskAttachmentService.getTaskAttachments(taskId);
+      setTasks(prev => prev.map(task => 
+        task.id === taskId 
+          ? { ...task, attachments }
+          : task
+      ));
+      
+      toast({
+        title: "Upload succesvol",
+        description: "De bijlage is toegevoegd aan de taak.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Kon bijlage niet toevoegen.",
+        variant: "destructive",
+      });
+    }
   };
 
   const activeTasks = tasks.filter(task => task.status !== 'completed');
@@ -273,6 +324,7 @@ const Tasks = () => {
                 projects={projects}
                 onComplete={handleTaskComplete}
                 onTaskStatusChange={handleTaskStatusChange}
+                onUpload={(taskId, type, content, analysis) => handleUpload(taskId, type, content, analysis)}
               />
             ))
           )}
