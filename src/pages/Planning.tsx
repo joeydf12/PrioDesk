@@ -99,22 +99,14 @@ const Planning = () => {
       <Header onCreateTask={() => setIsTaskModalOpen(true)} />
 
       <main className="container mx-auto px-4 py-8 pb-24">
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-slate-800 mb-2">Planning</h1>
             <p className="text-slate-600">Bekijk je planning</p>
           </div>
 
-          <div className="mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2 flex items-center">
-              <Calendar className="w-6 h-6 sm:w-8 sm:h-8 mr-3 text-blue-600" />
-              Weekplanning
-            </h1>
-            <p className="text-slate-600 text-sm sm:text-base">Bekijk je taken per dag van de week</p>
-          </div>
-
           <div className="flex items-center justify-between mb-6 gap-4">
-            <Button variant="outline" onClick={previousWeek} className="text-xs sm:text-sm">
+              <Button variant="outline" onClick={previousWeek} className="text-xs sm:text-sm">
               <ChevronLeft className="w-4 h-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Vorige week</span>
               <span className="sm:hidden">Vorige</span>
@@ -132,7 +124,7 @@ const Planning = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4">
             {weekDays.map((day, index) => {
               const dayTasks = getTasksForDate(day);
               const isToday = day.toDateString() === new Date().toDateString();
