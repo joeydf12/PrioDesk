@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
                   aria-label="Ga naar home"
                 >
                   <img
-                    src="/src/images/logopriodesk.png"
+                    src="../images/logopriodesk.png"
                     alt="PrioDesk Logo"
                     className="w-9 h-8 sm:w-10 sm:h-10 object-contain cursor-pointer"
                   />
