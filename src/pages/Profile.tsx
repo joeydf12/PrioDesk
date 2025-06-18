@@ -210,7 +210,7 @@ const Profile = () => {
               <DialogContent className="fixed inset-0 w-screen h-screen p-0 bg-white border-none shadow-xl z-50 flex items-center justify-center !left-0 !top-0 !translate-x-0 !translate-y-0 !max-w-full !rounded-none">
                 <div className="w-full sm:max-w-5xl lg:max-w-7xl py-8 px-4 sm:p-12 overflow-y-auto max-h-[90vh] relative flex flex-col items-center justify-start">
                   <div className="flex flex-col items-center text-center mt-8 mb-4">
-                    <img src="/src/images/logopriodesk.png" alt="Priodesk Logo" className="w-32 h-32 object-contain" />
+                    <img src="../images/logopriodesk.png" alt="Priodesk Logo" className="w-32 h-32 object-contain" />
                     <h2 className="text-2xl font-semibold mt-4 text-[#263456]">Abonnement</h2>
                   </div>
 
