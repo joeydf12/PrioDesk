@@ -17,8 +17,8 @@ export const analyzeContent = async (
   try {
     console.log('Starting content analysis...', { type });
     
-    // Use Gemini 2.0 Flash Lite model for faster processing
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+    // Use Gemini 2.5 Flash model for faster processing
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     let result;
     if (type === 'text') {
@@ -44,7 +44,11 @@ export const analyzeContent = async (
       const file = content as File;
       const fileContent = await readFileAsText(file);
       result = await model.generateContent(
-        `Analyze and provide a concise summary of the following document content. Give me the same language as the document. Focus on key points, main ideas, and any actionable items. Format the response in a clear, structured way:\n\n${fileContent}`
+        `
+        Analyseer het geüploade bestand \n\n${fileContent} en maak een beknopte samenvatting in het Nederlands. Focus op:
+        
+        herschrijf het artikel in het Nederlands.
+        `
       );
     } else {
       throw new Error('Unsupported content type');

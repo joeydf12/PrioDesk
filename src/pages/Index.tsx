@@ -47,6 +47,17 @@ const Index = () => {
     setSelectedTask(task);
   };
 
+  const handleUpload = async (taskId: string, type: 'file' | 'image' | 'text', content: string, analysis: string) => {
+    try {
+      // Refresh the tasks to get updated attachments
+      // Since useTasks doesn't have a refresh method, we'll need to refetch
+      // For now, we'll just show a success message
+      console.log('Upload successful for task:', taskId);
+    } catch (error) {
+      console.error('Upload error:', error);
+    }
+  };
+
   // Get today's tasks
   const today = new Date().toISOString().split('T')[0];
   const todaysTasks = tasks.filter(task => task.due_date === today && task.status !== 'completed');
@@ -129,6 +140,7 @@ const Index = () => {
               onTaskStatusChange={handleTaskStatusChange}
               onReschedule={handleTaskReschedule}
               onTaskClick={handleTaskClick}
+              onUpload={handleUpload}
             />
           </div>
         </div>
