@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { MobileNav } from '@/components/MobileNav';
 import { Button } from '@/components/ui/button';
@@ -7,14 +7,54 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Mail, Calendar, Check, X, ArrowLeft, Diamond } from 'lucide-react';
+import { LogOut, User, Mail, Calendar, Check, X, ArrowLeft, Diamond, Settings, Bell, Moon, Globe, Plus, ListTodo } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+interface Task {
+  id: number;
+  title: string;
+  description: string;
+  status: 'todo' | 'in-progress' | 'completed';
+  project_id: string | null;
+  created_at: string;
+  user_id: string;
+}
 
 const Profile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [notifications, setNotifications] = React.useState(true);
+  const [darkMode, setDarkMode] = React.useState(false);
+  const [language, setLanguage] = React.useState('nl');
+  const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
+  const [activeTab, setActiveTab] = React.useState<'settings' | 'account' | 'projects' | 'events' | null>(null);
+  const [tasks, setTasks] = React.useState<Task[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+      setTasks(data || []);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -28,19 +68,15 @@ const Profile = () => {
   const plans = [
     {
       name: 'Gratis',
-
-
       isNew: true,
       features: [
         'Prioriteiten stellen',
         'Zelf taken herplannen',
-
       ],
     },
     {
-      name: 'Premium ',
+      name: 'Premium',
       price: '5,99',
-
       isNew: false,
       features: [
         'Prioriteiten stellen',
@@ -50,12 +86,102 @@ const Profile = () => {
     },
   ];
 
+  const projects = [
+    {
+      id: '1',
+      name: 'Project Alpha',
+      description: 'Een innovatief project voor het automatiseren van workflows',
+      status: 'Actief',
+      tasks: tasks.filter(task => task.project_id === '1').length,
+      tasksList: tasks.filter(task => task.project_id === '1')
+    },
+    {
+      id: '2',
+      name: 'Project Beta',
+      description: 'Data analyse en visualisatie project',
+      status: 'In uitvoering',
+      tasks: tasks.filter(task => task.project_id === '2').length,
+      tasksList: tasks.filter(task => task.project_id === '2')
+    }
+  ];
+
+  const handleCreateProject = async (name: string, description: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([
+          {
+            name,
+            description,
+            user_id: user?.id,
+            status: 'Actief'
+          }
+        ])
+        .select();
+
+      if (error) throw error;
+
+      // Refresh tasks after creating project
+      await fetchTasks();
+
+      return data;
+    } catch (error) {
+      console.error('Error creating project:', error);
+      throw error;
+    }
+  };
+
+  const handleUpdateTaskProject = async (taskId: number, projectId: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ project_id: projectId })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      // Refresh tasks after updating
+      await fetchTasks();
+    } catch (error) {
+      console.error('Error updating task project:', error);
+      throw error;
+    }
+  };
+
+  // Voorbeeld events data
+  const events = [
+    {
+      id: 1,
+      title: 'Team Meeting',
+      date: '2024-03-20',
+      time: '10:00',
+      description: 'Wekelijks team overleg',
+      type: 'meeting'
+    },
+    {
+      id: 2,
+      title: 'Project Deadline',
+      date: '2024-03-25',
+      time: '17:00',
+      description: 'Deadline voor Project Alpha',
+      type: 'deadline'
+    },
+    {
+      id: 3,
+      title: 'Client Presentatie',
+      date: '2024-03-22',
+      time: '14:00',
+      description: 'Presentatie voor nieuwe client',
+      type: 'presentation'
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header onCreateTask={() => { }} />
 
       <main className="container mx-auto px-4 py-8 pb-24">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-slate-800 mb-2 flex items-center">
               <User className="w-8 h-8 mr-3 text-blue-600" />
@@ -74,7 +200,7 @@ const Profile = () => {
                       <div className="flex flex-col items-center gap-2 w-full">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-xl sm:text-2xl font-bold text-[#253253]">✨ Premium functies</span>
-                          <Badge variant="outline" className="bg-[#19c2f3] text-[#253253] border-[#19c2f3] text-xs px-2 py-1">Nieuw</Badge>
+                          <Badge variant="outline" className="bg-[#19c2f3] text-[#253253] border-[#19c2f3] text-xs px-2 py-1 rounded-md text-xs">Nieuw</Badge>
                         </div>
                         <div className="w-full rounded-lg bg-[#f3f7fa] p-4 flex flex-col gap-2 shadow-sm">
                           <div className="font-semibold text-[#253253] text-base mb-1 flex items-center gap-2">
@@ -92,7 +218,6 @@ const Profile = () => {
                 </button>
               </DialogTrigger>
               <DialogContent className="fixed inset-0 w-screen h-screen p-0 bg-[#73956F] border-none shadow-xl z-50 flex items-center justify-center !left-0 !top-0 !translate-x-0 !translate-y-0 !max-w-full !rounded-none">
-                <DialogTitle className="sr-only">Abonnement</DialogTitle>
                 <div className="w-full sm:max-w-5xl lg:max-w-7xl py-8 px-4 sm:p-12 overflow-y-auto max-h-[90vh] relative flex flex-col items-center justify-start">
                   <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground text-white">
                     <X className="h-6 w-6" />
@@ -102,7 +227,6 @@ const Profile = () => {
                   <div className="flex flex-col items-center text-center mt-8 mb-4">
                     <img src="/src/images/logopriodesk.png" alt="Priodesk Logo" className="w-32 h-32 object-contain" />
                     <h2 className="text-2xl font-semibold mt-4 text-white">Abonnement</h2>
-
                   </div>
 
                   <div className="w-full px-4 sm:px-0 sm:max-w-lg mx-auto flex flex-col sm:flex-row gap-4 justify-center mb-8">
@@ -130,57 +254,87 @@ const Profile = () => {
                   </div>
 
                   <Button variant="default" className="w-full max-w-xs bg-[#263456] hover:bg-[#263456]/90 text-white font-bold py-3 rounded-full shadow-lg mb-4">
-                    Neem Premium abbonement
+                    Neem Premium abonnement
                   </Button>
-
                 </div>
               </DialogContent>
             </Dialog>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Informatie</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mailadres</Label>
-                <div className="flex items-center space-x-2">
-                  <Mail className="w-4 h-4 text-slate-400" />
-                  <Input
-                    id="email"
-                    value={user?.email || ''}
-                    disabled
-                    className="bg-slate-50"
-                  />
+          {/* Navigatie blokken */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Projecten */}
+            <Card
+              className="hover:shadow-lg transition-all duration-200 cursor-pointer"
+              onClick={() => navigate('/projects')}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Diamond className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Projecten</h3>
+                    <p className="text-sm text-slate-600">Beheer je projecten en taken</p>
+                  </div>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              <div className="space-y-2">
-                <Label htmlFor="created">Account aangemaakt op</Label>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4 text-slate-400" />
-                  <Input
-                    id="created"
-                    value={user?.created_at ? new Date(user.created_at).toLocaleDateString('nl-NL') : ''}
-                    disabled
-                    className="bg-slate-50"
-                  />
+            {/* Events */}
+            <Card
+              className="hover:shadow-lg transition-all duration-200 cursor-pointer"
+              onClick={() => navigate('/events')}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Events</h3>
+                    <p className="text-sm text-slate-600">Bekijk en beheer je agenda</p>
+                  </div>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              <div className="pt-4">
-                <Button
-                  variant="destructive"
-                  onClick={handleSignOut}
-                  className="w-full sm:w-auto"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Uitloggen
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Instellingen */}
+            <Card
+              className="hover:shadow-lg transition-all duration-200 cursor-pointer"
+              onClick={() => navigate('/settings')}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Settings className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Instellingen</h3>
+                    <p className="text-sm text-slate-600">Pas je voorkeuren aan</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Account */}
+            <Card
+              className="hover:shadow-lg transition-all duration-200 cursor-pointer"
+              onClick={() => navigate('/account')}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <User className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Account</h3>
+                    <p className="text-sm text-slate-600">Beheer je account gegevens</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
 

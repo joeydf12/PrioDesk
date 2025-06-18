@@ -60,15 +60,15 @@ const Tasks = () => {
 
   const activeTasks = tasks.filter(task => task.status !== 'completed');
   const completedTasks = tasks.filter(task => task.status === 'completed');
-  
+
   const filteredTasks = (activeTab === 'active' ? activeTasks : completedTasks).filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     if (selectedDays.length === 0) return matchesSearch;
-    
+
     const taskDate = task.due_date ? new Date(task.due_date) : null;
     if (!taskDate) return selectedDays.includes('no-date') && matchesSearch;
-    
+
     const dayKey = taskDate.toISOString().split('T')[0];
     return selectedDays.includes(dayKey) && matchesSearch;
   });
@@ -99,7 +99,7 @@ const Tasks = () => {
   };
 
   const toggleDay = (dayKey: string) => {
-    setSelectedDays(prev => 
+    setSelectedDays(prev =>
       prev.includes(dayKey)
         ? prev.filter(d => d !== dayKey)
         : [...prev, dayKey]
@@ -142,7 +142,7 @@ const Tasks = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header onCreateTask={() => setIsTaskModalOpen(true)} />
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-800 mb-2">Mijn Taken</h1>
@@ -174,7 +174,7 @@ const Tasks = () => {
                 className="pl-10"
               />
             </div>
-            
+
             <Popover open={isDayFilterOpen} onOpenChange={setIsDayFilterOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full sm:w-[200px] justify-start">
@@ -259,7 +259,7 @@ const Tasks = () => {
             <div className="text-center py-8 text-slate-500">
               {activeTab === 'active' ? (
                 searchQuery || selectedDays.length > 0
-                  ? 'Geen taken gevonden voor deze filters' 
+                  ? 'Geen taken gevonden voor deze filters'
                   : 'Geen actieve taken'
               ) : (
                 'Geen afgeronde taken'
