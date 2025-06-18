@@ -13,16 +13,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-interface Task {
-  id: number;
-  title: string;
-  description: string;
-  status: 'todo' | 'in-progress' | 'completed';
-  project_id: string | null;
-  created_at: string;
-  user_id: string;
-}
+import { Task } from '@/types';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -48,7 +39,7 @@ const Profile = () => {
         .eq('user_id', user?.id);
 
       if (error) throw error;
-      setTasks(data || []);
+      setTasks((data || []) as Task[]);
     } catch (error) {
       console.error('Error fetching tasks:', error);
     } finally {
@@ -131,7 +122,7 @@ const Profile = () => {
     }
   };
 
-  const handleUpdateTaskProject = async (taskId: number, projectId: string | null) => {
+  const handleUpdateTaskProject = async (taskId: string, projectId: string | null) => {
     try {
       const { error } = await supabase
         .from('tasks')
@@ -184,7 +175,6 @@ const Profile = () => {
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-slate-800 mb-2 flex items-center">
-              <User className="w-8 h-8 mr-3 text-blue-600" />
               Profiel
             </h1>
             <p className="text-slate-600">Beheer je account instellingen</p>
@@ -217,21 +207,16 @@ const Profile = () => {
                   </Card>
                 </button>
               </DialogTrigger>
-              <DialogContent className="fixed inset-0 w-screen h-screen p-0 bg-[#73956F] border-none shadow-xl z-50 flex items-center justify-center !left-0 !top-0 !translate-x-0 !translate-y-0 !max-w-full !rounded-none">
+              <DialogContent className="fixed inset-0 w-screen h-screen p-0 bg-white border-none shadow-xl z-50 flex items-center justify-center !left-0 !top-0 !translate-x-0 !translate-y-0 !max-w-full !rounded-none">
                 <div className="w-full sm:max-w-5xl lg:max-w-7xl py-8 px-4 sm:p-12 overflow-y-auto max-h-[90vh] relative flex flex-col items-center justify-start">
-                  <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground text-white">
-                    <X className="h-6 w-6" />
-                    <span className="sr-only">Close</span>
-                  </DialogClose>
-
                   <div className="flex flex-col items-center text-center mt-8 mb-4">
                     <img src="/src/images/logopriodesk.png" alt="Priodesk Logo" className="w-32 h-32 object-contain" />
-                    <h2 className="text-2xl font-semibold mt-4 text-white">Abonnement</h2>
+                    <h2 className="text-2xl font-semibold mt-4 text-[#263456]">Abonnement</h2>
                   </div>
 
-                  <div className="w-full px-4 sm:px-0 sm:max-w-lg mx-auto flex flex-col sm:flex-row gap-4 justify-center mb-8">
+                  <div className="w-full  sm:px-0 sm:max-w-lg mx-auto flex flex-col sm:flex-row gap-4 justify-center mb-8">
                     {plans.map((plan) => (
-                      <Card key={plan.name} className="w-full sm:flex-1 rounded-xl p-6 relative bg-[#00a896]/[0.2] border border-white/[0.3] shadow-none">
+                      <Card key={plan.name} className="w-full sm:flex-1 rounded-xl p-6 relative bg-[#00a896] border border-white/[0.3] shadow-none">
                         {plan.isNew && (
                           <Badge className="absolute -top-2 -left-2 bg-[#263456] text-white rotate-[-10deg] font-bold px-3 py-1 rounded-md text-xs">Huidig</Badge>
                         )}
@@ -253,7 +238,7 @@ const Profile = () => {
                     ))}
                   </div>
 
-                  <Button variant="default" className="w-full max-w-xs bg-[#263456] hover:bg-[#263456]/90 text-white font-bold py-3 rounded-full shadow-lg mb-4">
+                  <Button variant="default" className="w-full mx-auto bg-[#263456] hover:bg-[#263456]/90 text-white font-bold py-3 shadow-lg mb-4 rounded-lg">
                     Neem Premium abonnement
                   </Button>
                 </div>

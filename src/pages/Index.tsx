@@ -78,11 +78,7 @@ const Index = () => {
         
         {/* Today's Date and Tasks Section */}
         <div className="flex flex-col gap-6 w-full sm:flex-row sm:items-start">
-          <div className={`bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-slate-200 ${!tasks.some(task => {
-            const today = new Date();
-            const dueDate = new Date(task.due_date);
-            return task.status !== 'completed' && dueDate < today;
-          }) ? 'w-full' : ''}`}>
+          <div className={`bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-slate-200 w-full mb-4 sm:mb-0`}>
             <div className="flex items-center mb-4">
               <h2 className="text-lg sm:text-xl font-semibold text-slate-800">
                 Vandaag - {new Date().toLocaleDateString('nl-NL', {
@@ -101,7 +97,7 @@ const Index = () => {
                 <p className="text-sm sm:text-base text-slate-500">Je hebt alle taken afgerond of er staan geen taken gepland!</p>
               </div>
             ) : (
-              <div className="grid gap-3 sm:gap-4">
+              <div className="grid gap-3 sm:gap-4 overflow-y-auto max-h-[300px]">
                 {todaysTasks.map(task => (
                   <div key={task.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <h4 className="font-semibold text-blue-800 text-sm sm:text-base mb-1">{task.title}</h4>
@@ -125,17 +121,21 @@ const Index = () => {
             )}
           </div>
 
-          <TaskDashboard
-            tasks={tasks}
-            projects={projects}
-            onTaskComplete={handleTaskComplete}
-            onTaskStatusChange={handleTaskStatusChange}
-            onReschedule={handleTaskReschedule}
-            onTaskClick={handleTaskClick}
-          />
+          <div className="w-full sm:w-[400px]">
+            <TaskDashboard
+              tasks={tasks}
+              projects={projects}
+              onTaskComplete={handleTaskComplete}
+              onTaskStatusChange={handleTaskStatusChange}
+              onReschedule={handleTaskReschedule}
+              onTaskClick={handleTaskClick}
+            />
+          </div>
         </div>
 
-        <AIInsights tasks={tasks} />
+        <div className="w-full">
+          <AIInsights tasks={tasks} />
+        </div>
       </main>
 
       <TaskCreationModal

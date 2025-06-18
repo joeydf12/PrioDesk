@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, CheckSquare, FolderOpen, Calendar, Clock, Menu, X, LogOut, User } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
@@ -26,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const navigate = useNavigate();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -34,11 +35,9 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
   };
 
   const navItems = [
-    { path: '/', icon: CheckSquare, label: 'Dashboard' },
     { path: '/tasks', icon: Clock, label: 'Taken' },
-    { path: '/completed', icon: CheckSquare, label: 'Afgerond' },
     { path: '/planning', icon: Calendar, label: 'Planning' },
-    { path: '/projects', icon: FolderOpen, label: 'Projecten' },
+    { path: '/profile', icon: User, label: 'Profiel' },
   ];
 
   const navItemsMobile = [
@@ -53,17 +52,27 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
       <div className="container mx-auto px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 sm:space-x-4">
-            <div className="flex items-center space-x-2">
-              <Link to="/">
-                <img
-                  src="/src/images/logopriodesk.png"
-                  alt="PrioDesk Logo"
-                  className="w-9 h-8 sm:w-10 sm:h-10 object-contain cursor-pointer"
-                />
-              </Link>
-              <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                PrioDesk
-              </h1>
+            <div className="flex items-center w-full">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate('/')}
+                  className="p-0 border-0 bg-transparent focus:outline-none"
+                  aria-label="Ga naar home"
+                >
+                  <img
+                    src="/src/images/logopriodesk.png"
+                    alt="PrioDesk Logo"
+                    className="w-9 h-8 sm:w-10 sm:h-10 object-contain cursor-pointer"
+                  />
+                </button>
+                <button
+                  onClick={() => navigate('/')}
+                  className="p-0 border-0 bg-transparent focus:outline-none"
+                  aria-label="Ga naar home"
+                >
+                  <span className="font-bold text-lg sm:text-xl text-[#263456]">PrioDesk</span>
+                </button>
+              </div>
             </div>
 
             {/* Desktop Navigation */}
@@ -93,56 +102,6 @@ export const Header: React.FC<HeaderProps> = ({ onCreateTask }) => {
               <Plus className="w-4 h-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Taak Toevoegen</span>
               <span className="sm:hidden">Toevoegen</span>
-            </Button>
-
-            {/* Profile Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <User className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">
-                <DropdownMenuLabel>Mijn Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/profile" className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profiel</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/tasks" className="flex items-center">
-                    <Clock className="mr-2 h-4 w-4" />
-                    <span>Taken</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/planning" className="flex items-center">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    <span>Planning</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Uitloggen</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
             </Button>
           </div>
         </div>
