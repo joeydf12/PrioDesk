@@ -288,32 +288,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               <span className="text-xs sm:text-sm">{formatDate(task.due_date)}</span>
             )}
           </div>
-
-          {showReschedule && !isRescheduling && task.status !== 'completed' && (
-            <div className="flex items-center gap-2">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsRescheduling(true);
-                }}
-                className="text-xs h-7"
-              >
-                Herplannen
-              </Button>
-              <Button
-                size="sm"
-                variant="default"
-                onClick={handleAiReschedule}
-                disabled={isAiRescheduling}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-xs h-7"
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                {isAiRescheduling ? 'Bezig...' : 'Herplannen met AI'}
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 
