@@ -11,6 +11,7 @@ import Planning from "./pages/Planning";
 import Projects from "./pages/Projects";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const queryClient = new QueryClient();
 
@@ -19,21 +20,23 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <AuthGuard>
-        <BrowserRouter>
-          <div className="min-h-screen pb-16 md:pb-0">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/tasks" element={<Tasks />} />
-              <Route path="/planning" element={<Planning />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <MobileNav />
-          </div>
-        </BrowserRouter>
-      </AuthGuard>
+      <AuthProvider>
+        <AuthGuard>
+          <BrowserRouter>
+            <div className="min-h-screen pb-16 md:pb-0">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/tasks" element={<Tasks />} />
+                <Route path="/planning" element={<Planning />} />
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <MobileNav />
+            </div>
+          </BrowserRouter>
+        </AuthGuard>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
