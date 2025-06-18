@@ -250,12 +250,6 @@ export function TaskUploadDialog({
           </TabsContent>
         </Tabs>
         )}
-        {analysisResult && (
-          <div className="mt-4 p-4 bg-muted rounded-lg">
-            <h4 className="font-medium mb-2">Analysis Result:</h4>
-            <p className="text-sm text-muted-foreground">{analysisResult}</p>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );
