@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, FileText, Image, MessageSquare, X, Loader2 } from 'lucide-react';
+import { Upload, FileText, Image, MessageSquare, X, Loader2, CheckCircle2 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { cn } from "@/lib/utils";
 import { analyzeContent } from '@/services/geminiService';
@@ -29,13 +29,14 @@ interface TaskUploadDialogProps {
 export function TaskUploadDialog({
   isOpen,
   onClose,
-  onUpload,
+  onUpload = () => {},
   taskId,
 }: TaskUploadDialogProps) {
   const [activeTab, setActiveTab] = useState('text');
   const [textContent, setTextContent] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
   const { toast } = useToast();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -91,7 +92,38 @@ export function TaskUploadDialog({
     maxFiles: 1,
   });
 
-  const handleTextSubmit = async () => {
+  const handleTextSummary = async () => {
+    if (!textContent.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter some text to summarize",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      setIsAnalyzing(true);
+      const prompt = `Vat de volgende tekst samen in maximaal 5 zinnen. Focus op de hoofdpunten en belangrijkste informatie. Antwoord in het Nederlands.\n\n${textContent}`;
+      const analysis = await analyzeContent('text', prompt);
+      if (!analysis) throw new Error('No analysis result received');
+      await taskAttachmentService.createAttachment(taskId, 'text', textContent, analysis);
+      setAnalysisResult(analysis);
+      onUpload('text', textContent, analysis);
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        onClose();
+      }, 1500);
+      toast({ title: "Success", description: "Samenvatting gemaakt!" });
+    } catch (error) {
+      console.error('Error creating summary:', error);
+      toast({ title: "Error", description: "Samenvatting mislukt.", variant: "destructive" });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleTextBullets = async () => {
     if (!textContent.trim()) {
       toast({
         title: "Error",
@@ -100,37 +132,22 @@ export function TaskUploadDialog({
       });
       return;
     }
-
     try {
       setIsAnalyzing(true);
-      const analysis = await analyzeContent('text', textContent);
-      console.log('Analysis result:', analysis);
-
-      if (!analysis) {
-        throw new Error('No analysis result received');
-      }
-
-      // Store in Supabase
-      const attachment = await taskAttachmentService.createAttachment(
-        taskId,
-        'text',
-        textContent,
-        analysis
-      );
-
+      const prompt = `Maak een puntsgewijze opsomming van de belangrijkste punten uit de volgende tekst. Gebruik maximaal 7 bullets. Antwoord in het Nederlands.\n\n${textContent}`;
+      const analysis = await analyzeContent('text', prompt);
+      if (!analysis) throw new Error('No analysis result received');
+      await taskAttachmentService.createAttachment(taskId, 'text', textContent, analysis);
       setAnalysisResult(analysis);
       onUpload('text', textContent, analysis);
-      toast({
-        title: "Success",
-        description: "Text analyzed and stored successfully",
-      });
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        onClose();
+      }, 1500);
+      toast({ title: "Success", description: "Opsomming gemaakt!" });
     } catch (error) {
-      console.error('Error analyzing text:', error);
-      toast({
-        title: "Error",
-        description: "Failed to analyze text. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Opsomming mislukt.", variant: "destructive" });
     } finally {
       setIsAnalyzing(false);
     }
@@ -152,12 +169,23 @@ export function TaskUploadDialog({
     });
   };
 
+  const handleUpload = (type, content, analysis) => {
+    onUpload(type, content, analysis);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] bg-white p-4 rounded-lg">
         <DialogHeader>
           <DialogTitle>Upload Content</DialogTitle>
         </DialogHeader>
+        {showSuccess ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
+            <div className="text-xl font-semibold text-green-700 mb-2">Upload gelukt!</div>
+            <div className="text-sm text-green-600">De analyse is toegevoegd aan de taak.</div>
+          </div>
+        ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="text">Text</TabsTrigger>
@@ -171,13 +199,24 @@ export function TaskUploadDialog({
               onChange={(e) => setTextContent(e.target.value)}
               className="min-h-[200px]"
             />
-            <Button
-              onClick={handleTextSubmit}
-              disabled={isAnalyzing || !textContent.trim()}
-              className="w-full"
-            >
-              {isAnalyzing ? 'Analyzing...' : 'Analyze Text'}
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 w-full">
+              <Button
+                onClick={handleTextSummary}
+                disabled={isAnalyzing || !textContent.trim()}
+                className="w-full"
+                variant="default"
+              >
+                {isAnalyzing ? 'Bezig...' : 'Maak samenvatting'}
+              </Button>
+              <Button
+                onClick={handleTextBullets}
+                disabled={isAnalyzing || !textContent.trim()}
+                className="w-full"
+                variant="outline"
+              >
+                {isAnalyzing ? 'Bezig...' : 'Maak opsomming'}
+              </Button>
+            </div>
           </TabsContent>
           <TabsContent value="file" className="space-y-4">
             <div
@@ -210,6 +249,7 @@ export function TaskUploadDialog({
             </div>
           </TabsContent>
         </Tabs>
+        )}
         {analysisResult && (
           <div className="mt-4 p-4 bg-muted rounded-lg">
             <h4 className="font-medium mb-2">Analysis Result:</h4>

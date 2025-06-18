@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -19,6 +18,7 @@ interface DayPlanningModalProps {
   onTaskComplete: (taskId: string) => void;
   onTaskStatusChange: (taskId: string, status: Task['status']) => void;
   onTaskClick?: (task: Task) => void;
+  onUpload?: (type: 'file' | 'image' | 'text', content: string, analysis: string) => void;
 }
 
 export const DayPlanningModal: React.FC<DayPlanningModalProps> = ({
@@ -30,6 +30,7 @@ export const DayPlanningModal: React.FC<DayPlanningModalProps> = ({
   onTaskComplete,
   onTaskStatusChange,
   onTaskClick,
+  onUpload,
 }) => {
   if (!date) return null;
 
@@ -71,6 +72,7 @@ export const DayPlanningModal: React.FC<DayPlanningModalProps> = ({
                   onComplete={onTaskComplete}
                   onTaskStatusChange={onTaskStatusChange}
                   onTaskClick={onTaskClick}
+                  onUpload={onUpload}
                 />
               ))}
             </div>

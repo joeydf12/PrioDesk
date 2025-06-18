@@ -11,7 +11,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { Calendar, Sparkles } from 'lucide-react';
 
 const Index = () => {
-  const { tasks, loading: tasksLoading, createTask, updateTask } = useTasks();
+  const { tasks, loading: tasksLoading, createTask, updateTask, refetch } = useTasks();
   const { projects, loading: projectsLoading } = useProjects();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [celebrationTask, setCelebrationTask] = useState<Task | null>(null);
@@ -45,6 +45,11 @@ const Index = () => {
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
+  };
+
+  const handleTaskUpload = async (type: 'file' | 'image' | 'text', content: string, analysis: string) => {
+    // Refresh the tasks data to show the new attachment
+    await refetch();
   };
 
   // Get today's tasks
@@ -129,6 +134,7 @@ const Index = () => {
               onTaskStatusChange={handleTaskStatusChange}
               onReschedule={handleTaskReschedule}
               onTaskClick={handleTaskClick}
+              onUpload={handleTaskUpload}
             />
           </div>
         </div>

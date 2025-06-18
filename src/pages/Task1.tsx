@@ -139,6 +139,7 @@ const Task1 = () => {
                                 projects={projects}
                                 onComplete={() => { }}
                                 onTaskStatusChange={() => { }}
+                                onUpload={() => { }}
                             />
 
                             <div>

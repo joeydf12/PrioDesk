@@ -58,6 +58,11 @@ const Tasks = () => {
     setIsTaskModalOpen(false);
   };
 
+  const handleTaskUpload = async (type: 'file' | 'image' | 'text', content: string, analysis: string) => {
+    // Refresh the tasks data to show the new attachment
+    await fetchTasks();
+  };
+
   const activeTasks = tasks.filter(task => task.status !== 'completed');
   const completedTasks = tasks.filter(task => task.status === 'completed');
 
@@ -273,6 +278,7 @@ const Tasks = () => {
                 projects={projects}
                 onComplete={handleTaskComplete}
                 onTaskStatusChange={handleTaskStatusChange}
+                onUpload={handleTaskUpload}
               />
             ))
           )}
