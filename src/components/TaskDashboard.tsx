@@ -156,7 +156,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
   };
 
   return (
-    <div className={`space-y-6 sm:space-y-8 w-full ${overdueTasks.length === 0 ? 'hidden' : ''}`}>
+    <div className={`space-y-4 sm:space-y-6 w-full ${overdueTasks.length === 0 ? 'hidden' : ''}`}>
       {/* { Stats } */}
       {/* <TaskStats 
         totalTasks={tasks.length}
@@ -165,25 +165,26 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
         inProgressTasks={inProgressTasks.length}
       /> */}
 
-      <div className="grid gap-4 sm:gap-6 w-full min-h-[350px] max-h-[350px]">
+      <div className="w-full">
         {overdueTasks.length > 0 && (
-          <div className="bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200 rounded-xl p-4 sm:p-6 min-h-[350px] max-h-[350px] overflow-y-auto shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sticky top-0 bg-red-50/80 backdrop-blur-sm z-10 pb-4 border-b border-red-200">
+          <div className="bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200 rounded-xl p-3 sm:p-6 shadow-sm">
+            <div className="flex flex-col gap-4 mb-4 sm:mb-6 sticky top-0 bg-red-50/80 backdrop-blur-sm z-10 pb-3 sm:pb-4 border-b border-red-200">
               <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-red-100">
-                  <AlertCircle className="w-5 h-5 text-red-600" />
+                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-100 flex-shrink-0">
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-red-800">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base sm:text-lg font-semibold text-red-800">
                     Aandacht Nodig
                   </h3>
-                  <p className="text-sm text-red-600">
+                  <p className="text-xs sm:text-sm text-red-600">
                     {overdueTasks.length} {overdueTasks.length === 1 ? 'taak' : 'taken'} {overdueTasks.length === 1 ? 'is' : 'zijn'} te laat
                   </p>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="flex items-center space-x-2 bg-white/50 rounded-lg px-3 py-1.5 border border-red-200">
+              
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center space-x-2 bg-white/50 rounded-lg px-3 py-2 border border-red-200 w-fit">
                   <Checkbox
                     id="select-all"
                     checked={selectedOverdueTasks.length === overdueTasks.length}
@@ -197,61 +198,67 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
                     Selecteer alles
                   </label>
                 </div>
+                
                 {selectedOverdueTasks.length > 0 && (
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                      <PopoverTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="bg-white hover:bg-red-50 border-red-200 hover:border-red-300 text-red-800 w-full sm:w-auto"
-                        >
-                          <Calendar className="h-4 w-4 mr-2" />
-                          Herplannen
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="end">
-                        <CalendarComponent
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                          initialFocus
-                        />
-                        <div className="p-3 border-t">
+                  <div className="flex flex-row gap-2">
+                    <div className="flex flex-row sm:flex-row gap-2 w-full">
+                      <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                        <PopoverTrigger asChild>
                           <Button 
-                            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-sm" 
-                            onClick={handleBulkReschedule}
-                            disabled={!selectedDate}
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-white hover:bg-red-50 border-red-200 hover:border-red-300 text-red-800 w-full justify-center"
                           >
-                            Herplan {selectedOverdueTasks.length} taken
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Herplannen
                           </Button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={handleAiReschedule}
-                      disabled={isAiRescheduling}
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 w-full sm:w-auto shadow-sm"
-                    >
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      {isAiRescheduling ? 'Bezig...' : 'Herplannen met AI'}
-                    </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
+                            initialFocus
+                          />
+                          <div className="p-3 border-t">
+                            <Button 
+                              style={{ backgroundColor: '#263354' }}
+                              className="w-full shadow-sm" 
+                              onClick={handleBulkReschedule}
+                              disabled={!selectedDate}
+                            >
+                              Herplan {selectedOverdueTasks.length} taken
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      <Button
+                        style={{ backgroundColor: '#263354' }}
+                        variant="default"
+                        size="sm"
+                        onClick={handleAiReschedule}
+                        disabled={isAiRescheduling}
+                        className="w-full sm:w-auto shadow-sm justify-center"
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        {isAiRescheduling ? 'Bezig...' : 'Herplannen met AI'}
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
-            <div className="grid gap-3 sm:gap-4">
+            
+            <div className="space-y-3 sm:space-y-4">
               {overdueTasks.map(task => (
-                <div key={task.id} className="flex items-start sm:items-center gap-3 group">
+                <div key={task.id} className="flex items-start gap-3 group">
                   <Checkbox
                     id={`task-${task.id}`}
                     checked={selectedOverdueTasks.includes(task.id)}
                     onCheckedChange={() => handleTaskSelect(task.id)}
-                    className="mt-1 sm:mt-0 border-red-300 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                    className="mt-1 flex-shrink-0 border-red-300 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                   />
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <TaskCard
                       task={task}
                       projects={projects}

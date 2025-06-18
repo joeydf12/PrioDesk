@@ -26,7 +26,7 @@ export const MobileNav = () => {
               "flex flex-col items-center justify-center gap-1 px-3 py-2",
               isActive(path)
                 ? "text-blue-600"
-                : "text-slate-600 hover:text-blue-600"
+                : "#263354 hover:text-blue-600"
             )}
           >
             <Icon className="h-6 w-6" />

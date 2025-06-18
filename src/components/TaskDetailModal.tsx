@@ -64,7 +64,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 bg-white p-4 rounded-lg">
           {task.description && (
             <div>
               <div className="flex items-center mb-2">

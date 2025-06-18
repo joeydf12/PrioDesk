@@ -99,9 +99,9 @@ export const AIInsights: React.FC<AIInsightsProps> = ({ tasks }) => {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center space-x-2 text-lg">
-          <Brain className="w-5 h-5 text-blue-600" />
+        <CardTitle className="flex justify-between text-lg">
           <span>AI Inzichten</span>
+          <Brain className="w-5 h-5 text-blue-600" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
