@@ -34,10 +34,24 @@ export const DayPlanningModal: React.FC<DayPlanningModalProps> = ({
 }) => {
   if (!date) return null;
 
+  const selectedDateString = date.toISOString().slice(0, 10);
+  console.log('Selected date string:', selectedDateString);
+
   const dayTasks = tasks.filter(task => {
-    const taskDate = task.planned_date || task.due_date;
-    return taskDate === date.toISOString().split('T')[0];
+    if (!task.planned_date) return false;
+    const plannedDateString = task.planned_date.slice(0, 10);
+    console.log('Task planned date:', {
+      taskId: task.id,
+      title: task.title,
+      plannedDate: task.planned_date,
+      plannedDateString,
+      selectedDateString,
+      matches: plannedDateString === selectedDateString
+    });
+    return plannedDateString === selectedDateString;
   });
+
+  console.log('Filtered tasks for day:', dayTasks);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('nl-NL', {

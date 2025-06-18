@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Task, Project } from '@/types';
 import { Calendar, Clock, ChevronRight, Sparkles, CheckCircle2, Upload, ChevronDown, ChevronUp, FileText, Image, MessageSquare } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/components/ui/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { TaskUploadDialog } from './TaskUploadDialog';
 
 interface TaskCardProps {
@@ -81,19 +81,43 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const diffTime = date.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '';
 
-    if (diffDays === 0) return 'Vandaag';
-    if (diffDays === 1) return 'Morgen';
-    if (diffDays === -1) return 'Gisteren';
-    if (diffDays < 0) return `${Math.abs(diffDays)} dagen te laat`;
-    if (diffDays <= 7) return `Over ${diffDays} dagen`;
+    // Parse the date string without timezone conversion
+    const [datePart, timePart] = dateString.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
 
-    return date.toLocaleDateString();
+    const date = new Date(year, month - 1, day, hours, minutes);
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Format time in Dutch format (HH:mm)
+    const time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+    // Check if it's today, tomorrow, or yesterday
+    if (date.toDateString() === now.toDateString()) {
+      return `Vandaag ${time}`;
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return `Morgen ${time}`;
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return `Gisteren ${time}`;
+    }
+
+    // For other dates, show the full date and time
+    return `${String(day).padStart(2, '0')}-${String(month).padStart(2, '0')}-${year} ${time}`;
+  };
+
+  // Calculate end time based on effort
+  const calculateEndTime = (startTime: string, effort: number) => {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const endDate = new Date(2000, 0, 1, hours, minutes);
+    endDate.setHours(endDate.getHours() + effort);
+    return `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
   };
 
   const handleCardClick = () => {
@@ -202,6 +226,33 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     );
   };
 
+  const handleReschedule = async () => {
+    if (!newDate) return;
+
+    // Parse the date string without timezone conversion
+    const [datePart, timePart] = newDate.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
+
+    // Format the date string without timezone conversion
+    const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+
+    await onReschedule(formattedDate);
+    setIsRescheduling(false);
+    setNewDate('');
+  };
+
+  useEffect(() => {
+    console.log('TaskCard mounted with task:', {
+      id: task.id,
+      title: task.title,
+      planned_date: task.planned_date,
+      planned_date_type: typeof task.planned_date,
+      due_date: task.due_date,
+      due_date_type: typeof task.due_date
+    });
+  }, [task]);
+
   return (
     <Card className={`relative ${isOverdue ? 'border-red-500' : ''} ${isSelected ? 'ring-2 ring-primary' : ''}`}>
       <div
@@ -244,8 +295,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 onComplete(task.id);
               }}
               className={`h-7 px-2 text-xs ${task.status === 'completed'
-                  ? 'bg-green-600 hover:bg-green-700'
-                  : 'border-slate-200 hover:border-slate-300'
+                ? 'bg-green-600 hover:bg-green-700'
+                : 'border-slate-200 hover:border-slate-300'
                 }`}
             >
               <CheckCircle2 className="w-4 h-4 mr-1" />
@@ -272,9 +323,21 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               <div className="flex items-center gap-2">
                 <Input
                   type="date"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
+                  value={newDate.split('T')[0]}
+                  onChange={(e) => {
+                    const time = newDate.split('T')[1]?.substring(0, 5) || '09:00';
+                    setNewDate(`${e.target.value}T${time}`);
+                  }}
                   className="h-7 text-xs w-32"
+                />
+                <Input
+                  type="time"
+                  value={newDate.split('T')[1]?.substring(0, 5) || '09:00'}
+                  onChange={(e) => {
+                    const date = newDate.split('T')[0];
+                    setNewDate(`${date}T${e.target.value}`);
+                  }}
+                  className="h-7 text-xs w-24"
                 />
                 <Button size="sm" onClick={handleRescheduleSubmit} className="h-7 px-2 text-xs">
                   Opslaan

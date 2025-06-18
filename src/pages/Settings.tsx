@@ -11,10 +11,7 @@ import { useNavigate } from 'react-router-dom';
 const Settings = () => {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState(true);
-    const [darkMode, setDarkMode] = useState(false);
     const [language, setLanguage] = useState('nl');
-    const [dataCollection, setDataCollection] = useState(true);
-    const [usageAnalytics, setUsageAnalytics] = useState(true);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -48,17 +45,6 @@ const Settings = () => {
                                 />
                             </div>
 
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label className="text-base">Dark Mode</Label>
-                                    <p className="text-sm text-slate-500">Schakel tussen licht en donker thema</p>
-                                </div>
-                                <Switch
-                                    checked={darkMode}
-                                    onCheckedChange={setDarkMode}
-                                />
-                            </div>
-
                             <div className="space-y-2">
                                 <Label className="text-base">Taal</Label>
                                 <select
@@ -71,32 +57,6 @@ const Settings = () => {
                                     <option value="fr">Français</option>
                                     <option value="de">Deutsch</option>
                                 </select>
-                            </div>
-
-                            <div className="pt-4 border-t">
-                                <h3 className="text-lg font-semibold mb-4">Privacy</h3>
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-0.5">
-                                            <Label className="text-base">Data verzameling</Label>
-                                            <p className="text-sm text-slate-500">Verzamel anonieme gebruiksgegevens</p>
-                                        </div>
-                                        <Switch
-                                            checked={dataCollection}
-                                            onCheckedChange={setDataCollection}
-                                        />
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-0.5">
-                                            <Label className="text-base">Gebruiksanalyse</Label>
-                                            <p className="text-sm text-slate-500">Help ons de app te verbeteren</p>
-                                        </div>
-                                        <Switch
-                                            checked={usageAnalytics}
-                                            onCheckedChange={setUsageAnalytics}
-                                        />
-                                    </div>
-                                </div>
                             </div>
                         </CardContent>
                     </Card>

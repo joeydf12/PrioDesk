@@ -1,20 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { TaskCreationModal } from '@/components/TaskCreationModal';
 import { DayPlanningModal } from '@/components/DayPlanningModal';
 import { CompletionCelebration } from '@/components/CompletionCelebration';
-import { useTasks } from '@/hooks/useTasks';
-import { useProjects } from '@/hooks/useProjects';
-import { Calendar, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MobileNav } from '@/components/MobileNav';
 import { useNavigate } from 'react-router-dom';
-import { Task } from '@/types';
+import { Task, Project } from '@/types';
+import { supabase } from '@/lib/supabase';
+import { toast } from '@/components/ui/use-toast';
 
 const Planning = () => {
-  const { tasks, loading: tasksLoading, createTask, updateTask } = useTasks();
-  const { projects, loading: projectsLoading } = useProjects();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -22,34 +22,140 @@ const Planning = () => {
   const [celebrationTask, setCelebrationTask] = useState<Task | null>(null);
   const navigate = useNavigate();
 
-  const loading = tasksLoading || projectsLoading;
+  useEffect(() => {
+    fetchTasks();
+    fetchProjects();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('planned_date', { ascending: true });
+
+      if (error) throw error;
+
+      console.log('Fetched tasks:', data);
+      setTasks(data || []);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      toast({
+        title: 'Fout bij ophalen taken',
+        description: 'Er is een fout opgetreden bij het ophalen van de taken.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      toast({
+        title: 'Fout bij ophalen projecten',
+        description: 'Er is een fout opgetreden bij het ophalen van de projecten.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleTaskCreate = async (newTask: any) => {
-    await createTask(newTask);
-    setIsTaskModalOpen(false);
+    try {
+      // Get the current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError) throw userError;
+      if (!user) throw new Error('No user logged in');
+
+      // Add user_id to the task
+      const taskWithUser = {
+        ...newTask,
+        user_id: user.id
+      };
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([taskWithUser])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setTasks(prev => [...prev, data]);
+      setIsTaskModalOpen(false);
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast({
+        title: 'Fout bij aanmaken taak',
+        description: 'Er is een fout opgetreden bij het aanmaken van de taak.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleTaskComplete = async (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task) {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
       const isCurrentlyCompleted = task.status === 'completed';
       const newStatus = isCurrentlyCompleted ? 'pending' : 'completed';
       const completedAt = isCurrentlyCompleted ? null : new Date().toISOString();
 
-      await updateTask(taskId, {
-        status: newStatus,
-        completed_at: completedAt
-      });
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: newStatus, completed_at: completedAt })
+        .eq('id', taskId);
 
-      // Only show celebration when completing a task (not when uncompleting)
+      if (error) throw error;
+
+      setTasks(prev => prev.map(t =>
+        t.id === taskId
+          ? { ...t, status: newStatus, completed_at: completedAt }
+          : t
+      ));
+
       if (!isCurrentlyCompleted) {
         setCelebrationTask({ ...task, status: 'completed', completed_at: completedAt });
       }
+    } catch (error) {
+      console.error('Error completing task:', error);
+      toast({
+        title: 'Fout bij voltooien taak',
+        description: 'Er is een fout opgetreden bij het voltooien van de taak.',
+        variant: 'destructive',
+      });
     }
   };
 
-  const handleTaskStatusChange = async (taskId: string, newStatus: any) => {
-    await updateTask(taskId, { status: newStatus });
+  const handleTaskStatusChange = async (taskId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: newStatus })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      setTasks(prev => prev.map(t =>
+        t.id === taskId ? { ...t, status: newStatus } : t
+      ));
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      toast({
+        title: 'Fout bij bijwerken taak',
+        description: 'Er is een fout opgetreden bij het bijwerken van de taak.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getWeekDays = (date: Date) => {
@@ -68,10 +174,11 @@ const Planning = () => {
   };
 
   const getTasksForDate = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0];
+    const selectedDateString = date.toISOString().slice(0, 10);
     return tasks.filter(task => {
-      const taskDate = task.planned_date || task.due_date;
-      return taskDate === dateString && task.status !== 'completed';
+      if (!task.planned_date) return false;
+      const plannedDateString = task.planned_date.slice(0, 10);
+      return plannedDateString === selectedDateString;
     });
   };
 
@@ -103,14 +210,6 @@ const Planning = () => {
     setSelectedDate(day);
     setIsDayModalOpen(true);
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -166,24 +265,16 @@ const Planning = () => {
                     {dayTasks.length === 0 ? (
                       <p className="text-slate-400 text-xs sm:text-sm italic">Geen taken</p>
                     ) : (
-                      dayTasks.slice(0, 3).map(task => {
-                        const project = projects.find(p => p.id === task.project_id);
-                        return (
-                          <div key={task.id} className="bg-slate-50 rounded p-2 text-xs sm:text-sm">
-                            <h4 className="font-medium text-slate-800 mb-1 truncate">{task.title}</h4>
-                            <div className="flex items-center gap-1 flex-wrap">
-                              <Badge variant="outline" className={getPriorityColor(task.priority)}>
-                                {task.priority}
-                              </Badge>
-                              {project && (
-                                <Badge variant="outline" className={project.color}>
-                                  {project.name}
-                                </Badge>
-                              )}
-                            </div>
+                      dayTasks.slice(0, 3).map(task => (
+                        <div key={task.id} className="bg-slate-50 rounded p-2 text-xs sm:text-sm">
+                          <h4 className="font-medium text-slate-800 mb-1 truncate">{task.title}</h4>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                              {task.priority}
+                            </Badge>
                           </div>
-                        );
-                      })
+                        </div>
+                      ))
                     )}
                     {dayTasks.length > 3 && (
                       <p className="text-slate-500 text-xs text-center">
