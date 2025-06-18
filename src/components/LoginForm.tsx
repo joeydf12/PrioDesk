@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,11 +49,9 @@ export const LoginForm: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div className="flex items-center justify-center mb-8">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <CheckSquare className="w-7 h-7 text-white" />
-          </div>
+          <img src="/src/images/logopriodesk.png" alt="Priodesk Logo" className="w-12 h-12 object-contain" />
           <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent ml-3">
-            TaskMind AI
+            Priodesk
           </h1>
         </div>
 
@@ -88,7 +85,7 @@ export const LoginForm: React.FC = () => {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            className="w-full bg-[#263456] hover:bg-[#263456]/90 text-white font-bold"
           >
             {loading ? 'Bezig...' : isLogin ? 'Inloggen' : 'Registreren'}
           </Button>
