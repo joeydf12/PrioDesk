@@ -84,7 +84,6 @@ const Index = () => {
             return task.status !== 'completed' && dueDate < today;
           }) ? 'w-full' : ''}`}>
             <div className="flex items-center mb-4">
-              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-600" />
               <h2 className="text-lg sm:text-xl font-semibold text-slate-800">
                 Vandaag - {new Date().toLocaleDateString('nl-NL', {
                   weekday: 'long',

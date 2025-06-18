@@ -96,13 +96,10 @@ const Planning = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header onCreateTask={() => setIsTaskModalOpen(true)} />
       
-      <main className="container mx-auto px-4 py-6 sm:py-8">
+      <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2 flex items-center">
-            <Calendar className="w-6 h-6 sm:w-8 sm:h-8 mr-3 text-blue-600" />
-            Weekplanning
-          </h1>
-          <p className="text-slate-600 text-sm sm:text-base">Bekijk je taken per dag van de week</p>
+        <h1 className="text-3xl font-bold text-slate-800 mb-2">Weekplanning</h1>
+        <p className="text-slate-600">Bekijk je taken per dag van de week</p>
         </div>
 
         <div className="flex items-center justify-between mb-6 gap-4">

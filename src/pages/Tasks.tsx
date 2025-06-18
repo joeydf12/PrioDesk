@@ -31,7 +31,7 @@ const Tasks = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [isDayFilterOpen, setIsDayFilterOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('active');
 
   useEffect(() => {
     if (user) {

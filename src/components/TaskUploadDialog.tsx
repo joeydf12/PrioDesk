@@ -154,7 +154,7 @@ export function TaskUploadDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] bg-white p-4 rounded-lg">
         <DialogHeader>
           <DialogTitle>Upload Content</DialogTitle>
         </DialogHeader>
