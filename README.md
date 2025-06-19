@@ -178,6 +178,28 @@ Dit project is gelicenseerd onder de MIT License - zie het [LICENSE](LICENSE) be
 - [Google AI](https://ai.google.dev/) voor de AI integratie
 - [Tailwind CSS](https://tailwindcss.com/) voor de styling utilities
 
+## 📝Veelgestelde Vragen (FAQ)
+#### Welke browsers worden ondersteund?
+ PrioDesk is geoptimaliseerd voor de nieuwste versies van Chrome, Firefox, Safari en Edge.
+
+#### Hoe kan ik mijn wachtwoord resetten?
+Ga naar de inlogpagina en klik op "Wachtwoord vergeten". Volg de instructies in de e-mail die je ontvangt.
+
+#### Kan ik PrioDesk op mijn mobiel gebruiken?
+Ja, PrioDesk heeft een responsief ontwerp en werkt goed op mobiele apparaten.
+
+#### Is mijn data veilig?
+Ja, we gebruiken robuuste beveiligingsmaatregelen om je data te beschermen, inclusief Supabase authenticatie en beveiligde API routes.
+
+#### Hoe kan ik contact opnemen met de support?
+Je kunt contact opnemen met maxnouts@gmail.com of joeydefijter11@gmail.com
+
+## 📝Wijzigingslog (Changelog)
+Versie 1.0.0 (Huidige versie)
+
+Eerste release van PrioDesk.
+Bevat taakbeheer, moderne UI/UX, authenticatie & beveiliging, en projectmanagement functies.
+
 ---
 
 **Gemaakt door Max Arnouts & Joey de Fijter**
