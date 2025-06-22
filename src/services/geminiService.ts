@@ -28,21 +28,44 @@ export const analyzeContent = async (
       );
     } else if (type === 'image') {
       console.log('Processing image content...');
-      const imageFile = content as File;
-      const imageData = await readFileAsBase64(imageFile);
-      result = await model.generateContent([
-        "Analyze this image in detail. Describe what you see, identify key elements, and provide any relevant context or insights. Format the response in a clear, structured way.",
-        {
-          inlineData: {
-            mimeType: imageFile.type,
-            data: imageData
+      if (typeof content === 'string') {
+        // Content is already a base64 string
+        result = await model.generateContent([
+          "Analyze this image in detail. Describe what you see, identify key elements, and provide any relevant context or insights. Format the response in a clear, structured way.",
+          {
+            inlineData: {
+              mimeType: 'image/png',
+              data: content.split(',')[1] // Remove data URL prefix
+            }
           }
-        }
-      ]);
+        ]);
+      } else {
+        // Content is a File object
+        const imageFile = content as File;
+        const imageData = await readFileAsBase64(imageFile);
+        result = await model.generateContent([
+          "Analyze this image in detail. Describe what you see, identify key elements, and provide any relevant context or insights. Format the response in a clear, structured way.",
+          {
+            inlineData: {
+              mimeType: imageFile.type,
+              data: imageData
+            }
+          }
+        ]);
+      }
     } else if (type === 'file') {
       console.log('Processing file content...');
-      const file = content as File;
-      const fileContent = await readFileAsText(file);
+      let fileContent: string;
+      
+      if (typeof content === 'string') {
+        // Content is already a string (pre-read from file)
+        fileContent = content;
+      } else {
+        // Content is a File object, need to read it
+        const file = content as File;
+        fileContent = await readFileAsText(file);
+      }
+      
       result = await model.generateContent(
         `
         Analyseer het geüploade bestand \n\n${fileContent} en maak een beknopte samenvatting in het Nederlands. Focus op:
