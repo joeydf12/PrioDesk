@@ -178,7 +178,8 @@ export function TaskUploadDialog({
         const extractedText = extractTextFromPdf(fileContent);
         contentForAnalysis = extractedText;
         
-        prompt = `Analyseer de volgende tekst die is geëxtraheerd uit een PDF-document en maak een beknopte samenvatting in het Nederlands. Focus op de hoofdpunten en belangrijkste informatie:
+        prompt = `Analyseer de volgende tekst die is geëxtraheerd uit een PDF-document en maak een beknopte samenvatting in 5 regels in het Nederlands. 
+        Focus op de hoofdpunten en belangrijkste informatie:
 
 ${extractedText}
 
@@ -236,7 +237,8 @@ Als de geëxtraheerde tekst beperkt is of geen leesbare inhoud bevat, leg dan ui
         const extractedText = extractTextFromPdf(fileContent);
         contentForAnalysis = extractedText;
         
-        prompt = `Analyseer de volgende tekst die is geëxtraheerd uit een PDF-document en maak een puntsgewijze opsomming van de belangrijkste punten. Gebruik maximaal 7 bullets. Antwoord in het Nederlands:
+        prompt = `Analyseer de volgende tekst die is geëxtraheerd uit een PDF-document en maak een puntsgewijze 
+        opsomming van de belangrijkste punten. Gebruik maximaal 7 bullets. Antwoord in het Nederlands:
 
 ${extractedText}
 

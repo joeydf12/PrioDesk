@@ -31,7 +31,7 @@ export const analyzeContent = async (
       if (typeof content === 'string') {
         // Content is already a base64 string
         result = await model.generateContent([
-          "Analyze this image in detail. Describe what you see, identify key elements, and provide any relevant context or insights. Format the response in a clear, structured way.",
+          `Bekijk de tekst van de afbeelding. Analyseer deze tekst en maak een beknopte samenvatting in 5 regels in het Nederlands.`,
           {
             inlineData: {
               mimeType: 'image/png',

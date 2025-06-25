@@ -34,9 +34,11 @@ const Tasks = () => {
   const [isDayFilterOpen, setIsDayFilterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('active');
   const [celebrationTask, setCelebrationTask] = useState<Task | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
+      setLoading(true);
       fetchTasks();
     }
   }, [user]);
@@ -176,6 +178,7 @@ const Tasks = () => {
 
   const fetchTasks = async () => {
     try {
+      setLoading(true);
       const { data: tasks, error } = await supabase
         .from('tasks')
         .select('*')
@@ -193,6 +196,7 @@ const Tasks = () => {
       );
 
       setTasks(tasksWithAttachments);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching tasks:', error);
       toast({
@@ -200,6 +204,7 @@ const Tasks = () => {
         description: "Failed to fetch tasks",
         variant: "destructive",
       });
+      setLoading(false);
     }
   };
 
@@ -319,7 +324,11 @@ const Tasks = () => {
         )}
 
         <div className="grid gap-4">
-          {filteredTasks.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center items-center py-16">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+            </div>
+          ) : filteredTasks.length === 0 ? (
             <div className="text-center py-8 text-slate-500">
               {activeTab === 'active' ? (
                 searchQuery || selectedDays.length > 0

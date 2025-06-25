@@ -23,7 +23,7 @@ export function Toaster() {
               )}
             </div>
             {action}
-            <ToastClose />
+            {!action && <ToastClose />}
           </Toast>
         )
       })}

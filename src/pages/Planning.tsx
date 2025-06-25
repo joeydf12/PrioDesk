@@ -3,7 +3,7 @@ import { Header } from '@/components/Header';
 import { TaskCreationModal } from '@/components/TaskCreationModal';
 import { DayPlanningModal } from '@/components/DayPlanningModal';
 import { CompletionCelebration } from '@/components/CompletionCelebration';
-import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MobileNav } from '@/components/MobileNav';
@@ -12,9 +12,21 @@ import { Task, Project } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
 
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  start_date: string;
+  start_time: string;
+  end_date: string;
+  end_time: string;
+  type: 'meeting' | 'deadline' | 'presentation';
+}
+
 const Planning = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -25,6 +37,7 @@ const Planning = () => {
   useEffect(() => {
     fetchTasks();
     fetchProjects();
+    fetchEvents();
   }, []);
 
   const fetchTasks = async () => {
@@ -62,6 +75,29 @@ const Planning = () => {
       toast({
         title: 'Fout bij ophalen projecten',
         description: 'Er is een fout opgetreden bij het ophalen van de projecten.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const fetchEvents = async () => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) return;
+
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('start_date', { ascending: true });
+
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      toast({
+        title: 'Fout bij ophalen events',
+        description: 'Er is een fout opgetreden bij het ophalen van de events.',
         variant: 'destructive',
       });
     }
@@ -140,13 +176,13 @@ const Planning = () => {
     try {
       const { error } = await supabase
         .from('tasks')
-        .update({ status: newStatus })
+        .update({ status: newStatus as Task['status'] })
         .eq('id', taskId);
 
       if (error) throw error;
 
       setTasks(prev => prev.map(t =>
-        t.id === taskId ? { ...t, status: newStatus } : t
+        t.id === taskId ? { ...t, status: newStatus as Task['status'] } : t
       ));
     } catch (error) {
       console.error('Error updating task status:', error);
@@ -180,6 +216,23 @@ const Planning = () => {
       const plannedDateString = task.planned_date.slice(0, 10);
       return plannedDateString === selectedDateString;
     });
+  };
+
+  const getEventsForDate = (date: Date) => {
+    const selectedDateString = date.toISOString().slice(0, 10);
+    return events.filter(event => {
+      const eventDateString = event.start_date;
+      return eventDateString === selectedDateString;
+    });
+  };
+
+  const getEventTypeColor = (type: string) => {
+    switch (type) {
+      case 'meeting': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'deadline': return 'bg-red-100 text-red-800 border-red-200';
+      case 'presentation': return 'bg-purple-100 text-purple-800 border-purple-200';
+      default: return 'bg-slate-100 text-slate-800 border-slate-200';
+    }
   };
 
   const weekDays = getWeekDays(currentWeek);
@@ -244,6 +297,7 @@ const Planning = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4">
             {weekDays.map((day, index) => {
               const dayTasks = getTasksForDate(day);
+              const dayEvents = getEventsForDate(day);
               const isToday = day.toDateString() === new Date().toDateString();
 
               return (
@@ -262,24 +316,58 @@ const Planning = () => {
                   </div>
 
                   <div className="space-y-2">
-                    {dayTasks.length === 0 ? (
-                      <p className="text-slate-400 text-xs sm:text-sm italic">Geen taken</p>
+                    {dayTasks.length === 0 && dayEvents.length === 0 ? (
+                      <p className="text-slate-400 text-xs sm:text-sm italic">Geen taken of events</p>
                     ) : (
-                      dayTasks.slice(0, 3).map(task => (
-                        <div key={task.id} className="bg-slate-50 rounded p-2 text-xs sm:text-sm">
-                          <h4 className="font-medium text-slate-800 mb-1 truncate">{task.title}</h4>
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <Badge variant="outline" className={getPriorityColor(task.priority)}>
-                              {task.priority}
-                            </Badge>
+                      <>
+                        {/* Tasks Section */}
+                        {dayTasks.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-slate-600">Taken:</p>
+                            {dayTasks.slice(0, 2).map(task => (
+                              <div key={task.id} className="bg-slate-50 rounded p-2 text-xs sm:text-sm">
+                                <h4 className="font-medium text-slate-800 mb-1 truncate">{task.title}</h4>
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                                    {task.priority}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                            {dayTasks.length > 2 && (
+                              <p className="text-slate-500 text-xs text-center">
+                                +{dayTasks.length - 2} meer taken
+                              </p>
+                            )}
                           </div>
-                        </div>
-                      ))
-                    )}
-                    {dayTasks.length > 3 && (
-                      <p className="text-slate-500 text-xs text-center">
-                        +{dayTasks.length - 3} meer
-                      </p>
+                        )}
+
+                        {/* Events Section */}
+                        {dayEvents.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-slate-600">Events:</p>
+                            {dayEvents.slice(0, 2).map(event => (
+                              <div key={event.id} className="bg-blue-50 rounded p-2 text-xs sm:text-sm">
+                                <h4 className="font-medium text-slate-800 mb-1 truncate flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {event.title}
+                                </h4>
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  <Badge variant="outline" className={getEventTypeColor(event.type)}>
+                                    {event.type}
+                                  </Badge>
+                                  <span className="text-xs text-slate-500">{event.start_time}</span>
+                                </div>
+                              </div>
+                            ))}
+                            {dayEvents.length > 2 && (
+                              <p className="text-slate-500 text-xs text-center">
+                                +{dayEvents.length - 2} meer events
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

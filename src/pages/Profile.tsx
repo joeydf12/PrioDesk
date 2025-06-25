@@ -27,16 +27,19 @@ const Profile = () => {
   const [loading, setLoading] = React.useState(true);
 
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    if (user?.id) {
+      fetchTasks();
+    }
+  }, [user]);
 
   const fetchTasks = async () => {
+    if (!user?.id) return; // Prevent API call if user is not loaded
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
       setTasks((data || []) as Task[]);

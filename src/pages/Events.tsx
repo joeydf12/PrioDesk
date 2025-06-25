@@ -16,8 +16,9 @@ interface Event {
     id: string;
     title: string;
     description: string;
-    date: string;
-    time: string;
+    start_date: string;
+    start_time: string;
+    end_time: string;
     type: 'meeting' | 'deadline' | 'presentation';
 }
 
@@ -25,44 +26,56 @@ const Events = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [events, setEvents] = useState<Event[]>([]);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     useEffect(() => {
-        fetchEvents();
-    }, []);
+        if (user?.id) {
+            fetchEvents();
+        }
+    }, [user]);
 
     const fetchEvents = async () => {
+        if (!user?.id) return; // Prevent API call if user is not loaded
         try {
             const { data, error } = await supabase
                 .from('events')
                 .select('*')
-                .eq('user_id', user?.id)
-                .order('date', { ascending: true });
+                .eq('user_id', user.id)
+                .order('start_date', { ascending: true });
 
             if (error) throw error;
-            setEvents(data || []);
+            setEvents(
+                (data || []).map((event) => ({
+                  ...event,
+                  type: event.type as "meeting" | "deadline" | "presentation",
+                }))
+              );
         } catch (error) {
             console.error('Error fetching events:', error);
         }
     };
 
-    const handleCreateEvent = async (title: string, description: string, date: string, time: string, type: string) => {
+    const handleCreateEvent = async (title: string, description: string, startDate: string, startTime: string, endTime: string, type: string) => {
         try {
             const { data, error } = await supabase
                 .from('events')
                 .insert([
                     {
-                        title,
-                        description,
-                        date,
-                        time,
-                        type,
-                        user_id: user?.id,
+                      title,
+                      description,
+                      start_date: startDate,
+                      start_time: startTime,
+                      end_date: startDate,
+                      end_time: endTime,
+                      type,
+                      user_id: user?.id,
                     },
-                ])
+                  ])
                 .select();
 
             if (error) throw error;
             await fetchEvents();
+            setIsDialogOpen(false); // Close the dialog after successful creation
         } catch (error) {
             console.error('Error creating event:', error);
         }
@@ -109,13 +122,15 @@ const Events = () => {
                                         </div>
                                         <div className="flex items-center gap-2 mt-3 text-sm text-slate-500">
                                             <Calendar className="w-4 h-4" />
-                                            <span>{new Date(event.date).toLocaleDateString('nl-NL')}</span>
+                                            <span>{new Date(event.start_date).toLocaleDateString('nl-NL')}</span>
                                             <span>•</span>
-                                            <span>{event.time}</span>
+                                            <span>{event.start_time}</span>
+                                            <span>-</span>
+                                            <span>{event.end_time}</span>
                                         </div>
                                     </Card>
                                 ))}
-                                <Dialog>
+                                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                                     <DialogTrigger asChild>
                                         <Button className="w-full" variant="outline">
                                             <Plus className="w-4 h-4 mr-2" />
@@ -139,12 +154,16 @@ const Events = () => {
                                                 <Input id="eventTitle" placeholder="Voer event titel in" />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="eventDate">Datum</Label>
-                                                <Input id="eventDate" type="date" />
+                                                <Label htmlFor="eventStartDate">Start datum</Label>
+                                                <Input id="eventStartDate" type="date" />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="eventTime">Tijd</Label>
-                                                <Input id="eventTime" type="time" />
+                                                <Label htmlFor="eventStartTime">Start tijd</Label>
+                                                <Input id="eventStartTime" type="time" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="eventEndTime">Eind tijd</Label>
+                                                <Input id="eventEndTime" type="time" />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="eventDescription">Beschrijving</Label>
@@ -165,22 +184,21 @@ const Events = () => {
                                                 className="w-full"
                                                 onClick={async () => {
                                                     const titleInput = document.getElementById('eventTitle') as HTMLInputElement;
-                                                    const dateInput = document.getElementById('eventDate') as HTMLInputElement;
-                                                    const timeInput = document.getElementById('eventTime') as HTMLInputElement;
+                                                    const startDateInput = document.getElementById('eventStartDate') as HTMLInputElement;
+                                                    const startTimeInput = document.getElementById('eventStartTime') as HTMLInputElement;
+                                                    const endTimeInput = document.getElementById('eventEndTime') as HTMLInputElement;
                                                     const descInput = document.getElementById('eventDescription') as HTMLInputElement;
                                                     const typeInput = document.getElementById('eventType') as HTMLSelectElement;
-                                                    if (titleInput && dateInput && timeInput && descInput && typeInput) {
+                                                    if (titleInput && startDateInput && startTimeInput && endTimeInput && descInput && typeInput) {
                                                         try {
                                                             await handleCreateEvent(
                                                                 titleInput.value,
                                                                 descInput.value,
-                                                                dateInput.value,
-                                                                timeInput.value,
+                                                                startDateInput.value,
+                                                                startTimeInput.value,
+                                                                endTimeInput.value,
                                                                 typeInput.value
                                                             );
-                                                            // Close dialog and refresh
-                                                            const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
-                                                            if (closeButton) closeButton.click();
                                                         } catch (error) {
                                                             console.error('Error creating event:', error);
                                                         }
