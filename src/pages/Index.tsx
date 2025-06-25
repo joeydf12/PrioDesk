@@ -9,6 +9,7 @@ import { Task } from '@/types';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { Calendar, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const { tasks, loading: tasksLoading, createTask, updateTask, refetch } = useTasks();
@@ -75,6 +76,27 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!projectsLoading && projects.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col items-center justify-center">
+        <Header onCreateTask={() => setIsTaskModalOpen(true)} />
+        <main className="container mx-auto px-4 py-8 flex flex-col items-center justify-center">
+          <div className="bg-white rounded-xl shadow-md p-8 flex flex-col items-center border border-slate-200">
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Nog geen projecten</h2>
+            <p className="text-slate-600 mb-4">Je hebt nog geen projecten aangemaakt. Maak je eerste project aan om te beginnen!</p>
+            <Button onClick={() => setIsTaskModalOpen(true)} className="mt-2">Nieuw project aanmaken</Button>
+          </div>
+        </main>
+        <TaskCreationModal
+          isOpen={isTaskModalOpen}
+          onClose={() => setIsTaskModalOpen(false)}
+          onCreateTask={handleTaskCreate}
+          projects={projects}
+        />
       </div>
     );
   }
