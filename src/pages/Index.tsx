@@ -49,7 +49,7 @@ const Index = () => {
   };
 
   const handleTaskReschedule = async (taskId: string, newDate: string) => {
-    await updateTask(taskId, { due_date: newDate, status: 'pending' });
+    await updateTask(taskId, { planned_date: newDate, status: 'pending' });
   };
 
   const handleTaskClick = (task: Task) => {
@@ -61,16 +61,48 @@ const Index = () => {
     await refetch();
   };
 
-  // Get today's tasks
-  const today = new Date().toISOString().split('T')[0];
-  const todaysTasks = tasks.filter(task => task.due_date === today && task.status !== 'completed');
-  
-  // Get overdue tasks to determine if TaskDashboard should be shown
-  const overdueTasks = tasks.filter(task => {
-    const today = new Date();
-    const dueDate = new Date(task.due_date);
-    return task.status !== 'completed' && dueDate < today;
+  // Helper to check if a date is today (date-only, UTC)
+  function isToday(dateStr) {
+    if (!dateStr) return false;
+    const d = new Date(dateStr.replace(' ', 'T'));
+    const now = new Date();
+    return d.getUTCFullYear() === now.getUTCFullYear() &&
+           d.getUTCMonth() === now.getUTCMonth() &&
+           d.getUTCDate() === now.getUTCDate();
+  }
+
+  const todaysTasks = tasks.filter(task => {
+    const result = task.status !== 'completed' && isToday(task.planned_date);
+    console.log('Task:', task.title, 'planned_date:', task.planned_date, 'isToday:', isToday(task.planned_date), 'status:', task.status, 'included:', result);
+    return result;
   });
+  console.log("todaysTasks", todaysTasks);
+
+  
+  // Helper to check if a date is in the past (date-only)
+  function isPast(date) {
+    if (!date) return false;
+    // Replace space with T for ISO format
+    const isoDate = date.replace(' ', 'T');
+    const d = new Date(isoDate);
+    const now = new Date();
+    // Compare only the date part
+    return d.setHours(0,0,0,0) < now.setHours(0,0,0,0);
+  }
+  const overdueTasks = tasks.filter(task => {
+    const dueDate = task.due_date;
+    const plannedDate = task.planned_date;
+
+    console.log("dueDate", dueDate, "plannedDate", plannedDate, "isPast(dueDate)", isPast(dueDate), "isPast(plannedDate)", isPast(plannedDate));
+    return (
+      task.status !== 'completed' &&
+      (
+        isPast(dueDate) ||
+        (plannedDate && isPast(plannedDate) && !isPast(dueDate))
+      )
+    );
+  });
+  console.log("overdueTasks", overdueTasks);
 
   if (loading) {
     return (
@@ -117,7 +149,6 @@ const Index = () => {
             bouw je momentum op voor de rest van de dag.
           </p>
         </div>
-        
         {/* Today's Date and Tasks Section */}
         <div className={`flex flex-col gap-6 w-full ${overdueTasks.length > 0 ? 'sm:flex-row sm:items-start' : ''}`}>
           <div className={`bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-slate-200 ${overdueTasks.length > 0 ? 'w-full sm:w-1/2' : 'w-full'}`}>
@@ -166,7 +197,7 @@ const Index = () => {
           {overdueTasks.length > 0 && (
             <div className="w-full sm:w-1/2">
               <TaskDashboard
-                tasks={tasks}
+                tasks={overdueTasks}
                 projects={projects}
                 onTaskComplete={handleTaskComplete}
                 onTaskStatusChange={handleTaskStatusChange}

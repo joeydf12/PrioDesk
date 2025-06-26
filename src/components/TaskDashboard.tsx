@@ -51,11 +51,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
 
   const pendingTasks = tasks.filter(task => task.status === 'pending');
   const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
-  const overdueTasks = tasks.filter(task => {
-    const today = new Date();
-    const dueDate = new Date(task.due_date);
-    return task.status !== 'completed' && dueDate < today;
-  });
+  const overdueTasks = tasks;
 
   const handleSelectAll = () => {
     if (selectedOverdueTasks.length === overdueTasks.length) {
@@ -105,17 +101,17 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
           (PRIORITY_SCORES[b.priority as keyof typeof PRIORITY_SCORES] || 1) -
           (PRIORITY_SCORES[a.priority as keyof typeof PRIORITY_SCORES] || 1)
         );
+      console.log('AI Reschedule - selectedTasks:', selectedTasks);
 
-      // Voor elke taak, zoek de eerste beschikbare dag
       for (const task of selectedTasks) {
         const taskScore = PRIORITY_SCORES[task.priority as keyof typeof PRIORITY_SCORES] || 1;
-
-        // Begin vanaf morgen en zoek de eerste beschikbare dag
         let currentDate = new Date(tomorrow);
         let foundDate = false;
+        const dueDate = new Date(task.due_date);
+        console.log(`Rescheduling task '${task.title}' (id: ${task.id}) - dueDate:`, dueDate);
 
-        // Zoek maximaal 30 dagen vooruit
-        for (let i = 0; i < 30 && !foundDate; i++) {
+        // Zoek tot en met de deadline
+        while (currentDate <= dueDate && !foundDate) {
           // Bereken hoeveel taken er al voor deze dag gepland staan
           const tasksForDay = tasks.filter(t => {
             const taskDate = t.planned_date || t.due_date;
@@ -130,6 +126,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
 
           // Als er nog ruimte is voor deze taak op deze dag
           if (dayScore + taskScore <= dailyTaskCapacity) {
+            console.log(`Planned date for task '${task.title}' (id: ${task.id}) set to:`, currentDate.toISOString());
             onReschedule(task.id, currentDate.toISOString());
             foundDate = true;
           } else {
@@ -137,16 +134,14 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
             currentDate.setDate(currentDate.getDate() + 1);
           }
         }
-
-        // Als er geen beschikbare dag gevonden is binnen 30 dagen, plan dan op de laatste gecontroleerde dag
         if (!foundDate) {
-          onReschedule(task.id, currentDate.toISOString());
+          console.log(`No available slot before deadline for task '${task.title}' (id: ${task.id})`);
         }
       }
 
       toast({
         title: "Taken herpland",
-        description: "AI heeft de taken verdeeld over beschikbare dagen, rekening houdend met prioriteiten en dagelijkse capaciteit.",
+        description: "AI heeft de taken verdeeld over beschikbare dagen vóór de deadline, rekening houdend met prioriteiten en dagelijkse capaciteit.",
       });
 
       setSelectedOverdueTasks([]);

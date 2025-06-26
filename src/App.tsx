@@ -17,7 +17,7 @@ import { AuthGuard } from "@/components/AuthGuard";
 import { MobileNav } from "@/components/MobileNav";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import Tasks from "./pages/Tasks";
-import Task1 from "@/pages/Task1";
+// import Task1 from "@/pages/Task1";
 import Planning from "./pages/Planning";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -71,7 +71,7 @@ const App = () => {
                     element={user ? <Index /> : <Navigate to="/login" />}
                   />
                   <Route path="/tasks" element={<Tasks />} />
-                  <Route path="/task1" element={<Task1 />} />
+                  {/* <Route path="/task1" element={<Task1 />} /> */}
                   <Route path="/planning" element={<Planning />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
