@@ -303,7 +303,6 @@ const Projects = () => {
           });
           return;
         }
-        
         // Other errors
         toast({
           title: 'Gebruiker niet gevonden',
@@ -322,35 +321,26 @@ const Projects = () => {
         return;
       }
 
-      // Create a shared copy of the project
-      const { data: newProject, error: shareError } = await supabase
-        .from('projects')
+      // Insert into project_shares (not projects!)
+      const { error: shareError } = await supabase
+        .from('project_shares')
         .insert([
           {
-            name: sharingProject.name,
-            description: sharingProject.description,
-            user_id: userData.id,
-            color: sharingProject.color || 'bg-blue-100 text-blue-800'
+            project_id: sharingProject.id,
+            shared_by: user.id,
+            shared_with: userData.id,
+            permission: sharePermission
           }
-        ])
-        .select()
-        .single();
+        ]);
 
       if (shareError) {
-        // Handle RLS policy errors specifically
-        if (shareError.code === '42501' || shareError.message.includes('row-level security policy')) {
-          toast({
-            title: 'Database configuratie probleem',
-            description: 'Er is een probleem met de database beveiliging. Neem contact op met de beheerder om de RLS policies bij te werken.',
-            variant: 'destructive',
-          });
-          return;
-        }
-        throw shareError;
+        toast({
+          title: 'Fout bij delen',
+          description: 'Er is een fout opgetreden bij het delen van het project: ' + shareError.message,
+          variant: 'destructive',
+        });
+        return;
       }
-
-      // Copy tasks
-      await copyTasksToNewProject(sharingProject.id, newProject.id, userData.id);
 
       toast({
         title: 'Project gedeeld',
@@ -368,6 +358,38 @@ const Projects = () => {
     } catch (error) {
       console.error('Error sharing project:', error);
       setError('Er is een fout opgetreden bij het delen van het project');
+    }
+  };
+
+  // Add a function to remove a share (for the owner)
+  const removeShare = async (shareId: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from('project_shares')
+        .delete()
+        .eq('id', shareId)
+        .eq('shared_by', user.id);
+      if (error) {
+        toast({
+          title: 'Fout bij verwijderen',
+          description: 'Er is een fout opgetreden bij het verwijderen van de share: ' + error.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Share verwijderd',
+          description: 'De gebruiker is succesvol verwijderd uit het project.',
+        });
+        // Optionally refresh shared members
+        if (selectedProject) await fetchSharedMembers(selectedProject);
+      }
+    } catch (error) {
+      toast({
+        title: 'Fout',
+        description: 'Er is een fout opgetreden bij het verwijderen van de share.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -442,30 +464,25 @@ const Projects = () => {
     }
 
     try {
-      // Find all projects with the same name that belong to other users
-      // These are the shared copies of this project
-      const { data: sharedProjects, error: sharedError } = await supabase
-        .from('projects')
-        .select(`
-          id,
-          user_id,
-          created_at
-        `)
-        .eq('name', currentProject.name)
-        .neq('user_id', user.id);
+      // Fetch all shares for this project
+      const { data: shares, error: sharesError } = await supabase
+        .from('project_shares')
+        .select('id, shared_with, permission, created_at')
+        .eq('project_id', projectId);
 
-      if (sharedError) {
-        console.error('Error fetching shared projects:', sharedError);
+      if (sharesError) {
+        console.error('Error fetching project shares:', sharesError);
+        setSharedMembers([]);
         return;
       }
 
-      if (sharedProjects && sharedProjects.length > 0) {
-        // Get user details for each shared project
-        const memberPromises = sharedProjects.map(async (sharedProject) => {
+      if (shares && shares.length > 0) {
+        // Get user details for each shared_with
+        const memberPromises = shares.map(async (share) => {
           const { data: userData, error: userError } = await supabase
             .from('profiles')
             .select('id, email, first_name, last_name')
-            .eq('id', sharedProject.user_id)
+            .eq('id', share.shared_with)
             .single();
 
           if (userError || !userData) {
@@ -473,12 +490,12 @@ const Projects = () => {
           }
 
           return {
-            id: sharedProject.user_id,
+            id: share.id,
             email: userData.email,
             first_name: userData.first_name,
             last_name: userData.last_name,
-            permission: 'view', // Default permission for shared copies
-            shared_at: sharedProject.created_at
+            permission: share.permission,
+            shared_at: share.created_at
           };
         });
 

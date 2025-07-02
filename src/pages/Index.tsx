@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TaskDashboard } from '@/components/TaskDashboard';
 import { TaskCreationModal } from '@/components/TaskCreationModal';
 import { TaskDetailModal } from '@/components/TaskDetailModal';
@@ -10,6 +10,7 @@ import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { Calendar, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '../lib/supabase';
 
 const Index = () => {
   const { tasks, loading: tasksLoading, createTask, updateTask, refetch } = useTasks();
