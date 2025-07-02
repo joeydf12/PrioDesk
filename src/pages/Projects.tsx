@@ -525,52 +525,31 @@ const Projects = () => {
     }
 
     try {
-      // Find the shared project for this member
-      const { data: sharedProject, error: findError } = await supabase
-        .from('projects')
-        .select('id')
-        .eq('name', currentProject.name)
-        .eq('user_id', memberId)
-        .single();
-
-      if (findError || !sharedProject) {
+      // Find the share for this member
+      const share = sharedMembers.find(m => m.id === memberId);
+      if (!share) {
         toast({
           title: 'Fout',
-          description: 'Kon het gedeelde project niet vinden.',
+          description: 'Kon de share niet vinden.',
           variant: 'destructive',
         });
         return;
       }
 
-      // Delete the shared project (this will also delete associated tasks)
+      // Delete the share from project_shares
       const { error: deleteError } = await supabase
-        .from('projects')
+        .from('project_shares')
         .delete()
-        .eq('id', sharedProject.id);
+        .eq('id', share.id)
+        .eq('shared_by', user.id);
 
       if (deleteError) {
         console.error('Delete error:', deleteError);
-        
-        // Handle specific error types
-        if (deleteError.code === '42501' || deleteError.message.includes('row-level security policy')) {
-          toast({
-            title: 'Database configuratie probleem',
-            description: 'Er is een probleem met de database beveiliging. Neem contact op met de beheerder om de RLS policies bij te werken.',
-            variant: 'destructive',
-          });
-        } else if (deleteError.code === 'PGRST116') {
-          toast({
-            title: 'Project niet gevonden',
-            description: 'Het gedeelde project kon niet worden gevonden of is al verwijderd.',
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Fout',
-            description: `Er is een fout opgetreden bij het verwijderen van de gedeelde gebruiker: ${deleteError.message}`,
-            variant: 'destructive',
-          });
-        }
+        toast({
+          title: 'Fout',
+          description: `Er is een fout opgetreden bij het verwijderen van de gedeelde gebruiker: ${deleteError.message}`,
+          variant: 'destructive',
+        });
         return;
       }
 
