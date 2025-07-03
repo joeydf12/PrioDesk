@@ -814,7 +814,8 @@ const Projects = () => {
                     projects.map(project => (
                       <Card
                         key={project.id}
-                        className="p-4 hover:shadow-lg transition-shadow"
+                        className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                        onClick={() => setSelectedProject(project.id)}
                       >
                         <div className="flex items-start justify-between mb-2">
                           <h3 className="font-semibold text-lg">{project.name}</h3>
@@ -875,10 +876,7 @@ const Projects = () => {
                           </div>
                         </div>
                         <p className="text-sm text-slate-600 mb-4">{project.description}</p>
-                        <div 
-                          className="flex justify-between items-center cursor-pointer"
-                          onClick={() => setSelectedProject(project.id)}
-                        >
+                        <div className="flex justify-between items-center">
                           <Badge variant="secondary">Actief</Badge>
                           <span className="text-sm text-slate-500">{project.tasks} taken</span>
                         </div>

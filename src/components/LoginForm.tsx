@@ -10,6 +10,7 @@ export const LoginForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'slack' | null>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,6 +46,48 @@ export const LoginForm: React.FC = () => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setOauthLoading('google');
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/profile`,
+        },
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: 'Google Login Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setOauthLoading(null);
+    }
+  };
+
+  const handleSlackLogin = async () => {
+    setOauthLoading('slack');
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'slack',
+        options: {
+          redirectTo: `${window.location.origin}/profile`,
+        },
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: 'Slack Login Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setOauthLoading(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
@@ -55,6 +98,38 @@ export const LoginForm: React.FC = () => {
           </h1>
         </div>
 
+        {/* OAuth Buttons */}
+        <div className="flex flex-col gap-2 mb-6">
+          <Button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={oauthLoading === 'google'}
+            aria-label="Inloggen met Google"
+            className="w-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 font-semibold shadow-sm"
+          >
+            <span className="text-lg" role="img" aria-label="Google">🔵</span>
+            {oauthLoading === 'google' ? 'Bezig met Google...' : 'Inloggen met Google'}
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSlackLogin}
+            disabled={oauthLoading === 'slack'}
+            aria-label="Inloggen met Slack"
+            className="w-full bg-[#4A154B] text-white hover:bg-[#4A154B]/90 flex items-center justify-center gap-2 font-semibold shadow-sm"
+          >
+            <span className="text-lg" role="img" aria-label="Slack">💬</span>
+            {oauthLoading === 'slack' ? 'Bezig met Slack...' : 'Inloggen met Slack'}
+          </Button>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center my-6">
+          <div className="flex-grow h-px bg-gray-200" />
+          <span className="mx-4 text-gray-400 font-medium">of</span>
+          <div className="flex-grow h-px bg-gray-200" />
+        </div>
+
+        {/* Email/Password Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -85,17 +160,17 @@ export const LoginForm: React.FC = () => {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#263456] hover:bg-[#263456]/90 text-white font-bold"
+            className="w-full bg-[#263456] hover:bg-[#263456]/90 text-white font-bold shadow-sm"
           >
             {loading ? 'Bezig...' : isLogin ? 'Inloggen' : 'Registreren'}
           </Button>
         </form>
 
-        <div className="mt-4 text-center">
+        <div className="mt-6 text-center">
           <button
             type="button"
             onClick={() => setIsLogin(!isLogin)}
-            className="text-blue-600 hover:text-blue-800"
+            className="text-blue-600 hover:text-blue-800 font-medium focus:underline"
           >
             {isLogin ? 'Nog geen account? Registreer hier' : 'Al een account? Log hier in'}
           </button>
