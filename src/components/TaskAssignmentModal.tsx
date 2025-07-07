@@ -37,6 +37,8 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
   project,
   onAssignmentChange,
 }) => {
+  console.log('TaskAssignmentModal rendered', { isOpen, task, project });
+
   const [sharedMembers, setSharedMembers] = useState<SharedMember[]>([]);
   const [selectedMember, setSelectedMember] = useState<string>('');
   const [assignmentNotes, setAssignmentNotes] = useState('');
@@ -45,11 +47,15 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    if (isOpen && project) {
-      fetchSharedMembers();
-      if (task) {
-        fetchCurrentAssignment();
+    try {
+      if (isOpen && project) {
+        fetchSharedMembers();
+        if (task) {
+          fetchCurrentAssignment();
+        }
       }
+    } catch (err) {
+      console.error('Error in useEffect:', err);
     }
   }, [isOpen, project, task]);
 
@@ -131,12 +137,14 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
 
     setLoading(true);
     try {
+      console.log('Assigning task:', { taskId: task.id, assignedTo: selectedMember, notes: assignmentNotes });
       // Check if taskAssignmentService is available
       if (!taskAssignmentService || typeof taskAssignmentService.assignTask !== 'function') {
         throw new Error('Task assignment service not available');
       }
 
-      await taskAssignmentService.assignTask(task.id, selectedMember, assignmentNotes);
+      const result = await taskAssignmentService.assignTask(task.id, selectedMember, assignmentNotes);
+      console.log('Assignment result:', result);
       
       toast({
         title: 'Taak toegewezen',
@@ -164,12 +172,14 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
 
     setLoading(true);
     try {
+      console.log('Unassigning task:', { taskId: task.id });
       // Check if taskAssignmentService is available
       if (!taskAssignmentService || typeof taskAssignmentService.unassignTask !== 'function') {
         throw new Error('Task assignment service not available');
       }
 
-      await taskAssignmentService.unassignTask(task.id);
+      const result = await taskAssignmentService.unassignTask(task.id);
+      console.log('Unassignment result:', result);
       
       toast({
         title: 'Toewijzing opgeheven',
@@ -198,130 +208,16 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
     return member.email;
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-4">
-        <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl flex items-center gap-2">
-            <UserCheck className="w-5 h-5" />
-            Taak Toewijzen
-          </DialogTitle>
-          <DialogDescription className="text-sm sm:text-base">
-            {task ? `Wijs "${task.title}" toe aan een teamlid` : 'Selecteer een taak om toe te wijzen'}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          {task && (
-            <>
-              {/* Current Assignment */}
-              {currentAssignment && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-800">
-                        Huidige toewijzing:
-                      </span>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">
-                      Toegewezen
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-blue-700 mt-1">
-                    {currentAssignment.first_name && currentAssignment.last_name
-                      ? `${currentAssignment.first_name} ${currentAssignment.last_name}`
-                      : currentAssignment.email}
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleUnassignTask}
-                    disabled={loading}
-                    className="mt-2 w-full"
-                  >
-                    <UserX className="w-4 h-4 mr-2" />
-                    Toewijzing opheffen
-                  </Button>
-                </div>
-              )}
-
-              {/* Assign to Member */}
-              <div className="space-y-2">
-                <Label className="text-sm sm:text-base">Toewijzen aan</Label>
-                <Select value={selectedMember} onValueChange={setSelectedMember}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecteer een teamlid" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sharedMembers.length === 0 ? (
-                      <SelectItem value="" disabled>
-                        Geen gedeelde leden beschikbaar
-                      </SelectItem>
-                    ) : (
-                      sharedMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          <div className="flex items-center justify-between w-full">
-                            <span>{getMemberDisplayName(member)}</span>
-                            <Badge variant="outline" className="ml-2 text-xs">
-                              {member.permission === 'edit' ? 'Bewerken' : 'Bekijken'}
-                            </Badge>
-                          </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                
-                {sharedMembers.length === 0 && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      <strong>Geen teamleden gevonden.</strong> Deel dit project eerst met teamleden om taken toe te wijzen.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Assignment Notes */}
-              <div className="space-y-2">
-                <Label className="text-sm sm:text-base">Notities (optioneel)</Label>
-                <Textarea
-                  placeholder="Voeg notities toe over deze toewijzing..."
-                  value={assignmentNotes}
-                  onChange={(e) => setAssignmentNotes(e.target.value)}
-                  className="text-sm min-h-[80px]"
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  onClick={onClose}
-                  className="flex-1"
-                  disabled={loading}
-                >
-                  Annuleren
-                </Button>
-                <Button
-                  onClick={handleAssignTask}
-                  disabled={!selectedMember || loading}
-                  className="flex-1"
-                >
-                  {loading ? 'Toewijzen...' : 'Toewijzen'}
-                </Button>
-              </div>
-            </>
-          )}
-
-          {!task && (
-            <div className="text-center py-8">
-              <User className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-              <p className="text-slate-500">Selecteer een taak om toe te wijzen</p>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+  try {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent>
+          <div>Pagina word nog gemaakt, probeer het later nog eens.</div>
+        </DialogContent>
+      </Dialog>
+    );
+  } catch (err) {
+    console.error('Error in render:', err);
+    return <div>Error rendering modal</div>;
+  }
 }; 
