@@ -18,7 +18,8 @@ interface DayPlanningModalProps {
   onTaskComplete: (taskId: string) => void;
   onTaskStatusChange: (taskId: string, status: Task['status']) => void;
   onTaskClick?: (task: Task) => void;
-  onUpload?: (type: 'file' | 'image' | 'text', content: string, analysis: string) => void;
+  onUpload?: (taskId: string, type: 'file' | 'image' | 'text', content: string, analysis: string) => void;
+  onEdit?: (taskId: string, updatedTask: Partial<Task>) => void;
 }
 
 export const DayPlanningModal: React.FC<DayPlanningModalProps> = ({
@@ -31,6 +32,7 @@ export const DayPlanningModal: React.FC<DayPlanningModalProps> = ({
   onTaskStatusChange,
   onTaskClick,
   onUpload,
+  onEdit,
 }) => {
   if (!date) return null;
 
@@ -90,6 +92,7 @@ export const DayPlanningModal: React.FC<DayPlanningModalProps> = ({
                   onTaskStatusChange={onTaskStatusChange}
                   onTaskClick={onTaskClick}
                   onUpload={onUpload}
+                  onEdit={onEdit}
                 />
               ))}
             </div>

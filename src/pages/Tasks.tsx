@@ -68,6 +68,24 @@ const Tasks = () => {
     await updateTask(taskId, { status: newStatus });
   };
 
+  const handleTaskEdit = async (taskId: string, updatedTask: Partial<Task>) => {
+    try {
+      await updateTask(taskId, updatedTask);
+      await fetchTasks(); // Refresh the tasks to update the UI
+      
+      toast({
+        title: "Taak bijgewerkt",
+        description: "De taak is succesvol bijgewerkt.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Kon taak niet bijwerken: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleTaskCreate = async (newTask: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -347,6 +365,7 @@ const Tasks = () => {
                 onComplete={handleTaskComplete}
                 onTaskStatusChange={handleTaskStatusChange}
                 onUpload={handleTaskUpload}
+                onEdit={handleTaskEdit}
               />
             ))
           )}

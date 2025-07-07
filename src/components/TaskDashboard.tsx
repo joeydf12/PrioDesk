@@ -23,7 +23,8 @@ interface TaskDashboardProps {
   onReschedule: (taskId: string, newDate: string) => void;
   onTaskClick?: (task: Task) => void;
   dailyTaskCapacity?: number; // Maximum number of tasks that can be done per day
-  onUpload?: (type: 'file' | 'image' | 'text', content: string, analysis: string) => void;
+  onUpload?: (taskId: string, type: 'file' | 'image' | 'text', content: string, analysis: string) => void;
+  onEdit?: (taskId: string, updatedTask: Partial<Task>) => void;
 }
 
 // Priority scoring system
@@ -41,7 +42,8 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
   onReschedule,
   onTaskClick,
   dailyTaskCapacity = 7, // Default capacity of 7 tasks per day
-  onUpload
+  onUpload,
+  onEdit
 }) => {
   const [selectedOverdueTasks, setSelectedOverdueTasks] = useState<string[]>([]);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -270,6 +272,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
                       showReschedule
                       dailyTaskCapacity={dailyTaskCapacity}
                       onUpload={onUpload}
+                      onEdit={onEdit}
                     />
                   </div>
                 </div>

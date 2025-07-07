@@ -194,6 +194,33 @@ const Planning = () => {
     }
   };
 
+  const handleTaskEdit = async (taskId: string, updatedTask: Partial<Task>) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update(updatedTask)
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      setTasks(prev => prev.map(t =>
+        t.id === taskId ? { ...t, ...updatedTask } : t
+      ));
+
+      toast({
+        title: "Taak bijgewerkt",
+        description: "De taak is succesvol bijgewerkt.",
+      });
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast({
+        title: 'Fout bij bijwerken taak',
+        description: 'Er is een fout opgetreden bij het bijwerken van de taak.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getWeekDays = (date: Date) => {
     const week = [];
     const startOfWeek = new Date(date);
@@ -392,6 +419,7 @@ const Planning = () => {
         onClose={() => setIsDayModalOpen(false)}
         onTaskComplete={handleTaskComplete}
         onTaskStatusChange={handleTaskStatusChange}
+        onEdit={handleTaskEdit}
       />
 
       <CompletionCelebration

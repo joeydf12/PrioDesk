@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Task, Project } from '@/types';
-import { Calendar, Clock, ChevronRight, Sparkles, CheckCircle2, Upload, ChevronDown, ChevronUp, FileText, Image, MessageSquare } from 'lucide-react';
+import { Calendar, Clock, ChevronRight, Sparkles, CheckCircle2, Upload, ChevronDown, ChevronUp, FileText, Image, MessageSquare, Edit, Save, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { TaskUploadDialog } from './TaskUploadDialog';
@@ -22,6 +24,7 @@ interface TaskCardProps {
   isSelected?: boolean;
   onSelect?: (taskId: string) => void;
   onUpload?: (taskId: string, type: 'file' | 'image' | 'text', content: string, analysis: string) => void;
+  onEdit?: (taskId: string, updatedTask: Partial<Task>) => void;
 }
 
 // Priority scoring system
@@ -45,6 +48,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   isSelected,
   onSelect,
   onUpload,
+  onEdit,
 }) => {
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [newDate, setNewDate] = useState(task.due_date);
@@ -52,6 +56,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    title: task.title,
+    description: task.description || '',
+    priority: task.priority,
+    effort: task.effort,
+    due_date: task.due_date,
+    planned_date: task.planned_date || '',
+    notes: task.notes || '',
+  });
   const { toast } = useToast();
 
   const project = projects.find(p => p.id === task.project_id);
@@ -121,6 +135,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   };
 
   const handleCardClick = () => {
+    if (isEditing) return; // Don't expand when editing
+    
     if (onTaskClick) {
       onTaskClick(task);
     } else {
@@ -237,9 +253,62 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     // Format the date string without timezone conversion
     const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
 
-    await onReschedule(formattedDate);
+    if (onReschedule) {
+      await onReschedule(task.id, formattedDate);
+    }
     setIsRescheduling(false);
     setNewDate('');
+  };
+
+  const handleEditSave = async () => {
+    if (!onEdit) return;
+
+    try {
+      // Format dates properly
+      const formattedDueDate = editFormData.due_date.includes('T') 
+        ? editFormData.due_date 
+        : `${editFormData.due_date}T09:00:00`;
+      
+      const formattedPlannedDate = editFormData.planned_date && editFormData.planned_date.includes('T')
+        ? editFormData.planned_date
+        : editFormData.planned_date ? `${editFormData.planned_date}T09:00:00` : null;
+
+      const updatedTask: Partial<Task> = {
+        title: editFormData.title,
+        description: editFormData.description,
+        priority: editFormData.priority,
+        effort: editFormData.effort,
+        due_date: formattedDueDate,
+        planned_date: formattedPlannedDate,
+        notes: editFormData.notes,
+      };
+
+      await onEdit(task.id, updatedTask);
+      setIsEditing(false);
+      toast({
+        title: "Taak bijgewerkt",
+        description: "De taak is succesvol bijgewerkt.",
+      });
+    } catch (error) {
+      toast({
+        title: "Fout bij bijwerken",
+        description: "Er is een fout opgetreden bij het bijwerken van de taak.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditFormData({
+      title: task.title,
+      description: task.description || '',
+      priority: task.priority,
+      effort: task.effort,
+      due_date: task.due_date,
+      planned_date: task.planned_date || '',
+      notes: task.notes || '',
+    });
+    setIsEditing(false);
   };
 
   useEffect(() => {
@@ -251,68 +320,175 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       due_date: task.due_date,
       due_date_type: typeof task.due_date
     });
+
+    // Reset edit form data when task changes
+    setEditFormData({
+      title: task.title,
+      description: task.description || '',
+      priority: task.priority,
+      effort: task.effort,
+      due_date: task.due_date,
+      planned_date: task.planned_date || '',
+      notes: task.notes || '',
+    });
   }, [task]);
 
   return (
     <Card className={`relative ${isOverdue ? 'border-red-500' : ''} ${isSelected ? 'ring-2 ring-primary' : ''}`}>
       <div
-        className="p-3 sm:p-4 cursor-pointer"
+        className="p-2 sm:p-3 md:p-4 cursor-pointer"
         onClick={handleCardClick}
       >
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
-            <h4 className={`font-semibold text-slate-800 mb-1 text-sm sm:text-base truncate ${task.status === 'completed' ? '' : ''}`}>
-              {task.title}
-            </h4>
-            {task.description && (
-              <p className="text-slate-600 text-xs sm:text-sm mb-2 line-clamp-2">{task.description}</p>
+            {isEditing ? (
+              <div className="space-y-3">
+                <Input
+                  value={editFormData.title}
+                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                  placeholder="Taak titel"
+                  className="text-sm sm:text-base"
+                />
+                <Textarea
+                  value={editFormData.description}
+                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                  placeholder="Beschrijving (optioneel)"
+                  className="text-xs sm:text-sm min-h-[60px]"
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Select value={editFormData.priority} onValueChange={(value) => setEditFormData({ ...editFormData, priority: value as 'low' | 'medium' | 'high' })}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Prioriteit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Laag</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">Hoog</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={editFormData.effort} onValueChange={(value) => setEditFormData({ ...editFormData, effort: value as 'small' | 'medium' | 'large' })}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Inspanning" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Klein</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Groot</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Input
+                    type="date"
+                    value={editFormData.due_date.split('T')[0]}
+                    onChange={(e) => setEditFormData({ ...editFormData, due_date: e.target.value })}
+                    className="h-8 text-xs"
+                  />
+                  <Input
+                    type="date"
+                    value={editFormData.planned_date ? editFormData.planned_date.split('T')[0] : ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, planned_date: e.target.value })}
+                    placeholder="Geplande datum (optioneel)"
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                <h4 className={`font-semibold text-slate-800 mb-1 text-sm sm:text-base truncate ${task.status === 'completed' ? '' : ''}`}>
+                  {task.title}
+                </h4>
+                {task.description && (
+                  <p className="text-slate-600 text-xs sm:text-sm mb-2 line-clamp-2">{task.description}</p>
+                )}
+
+                <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                  <Badge variant="outline" className={`${getPriorityColor(task.priority)} text-xs`}>
+                    {task.priority}
+                  </Badge>
+
+                  {project && (
+                    <Badge variant="outline" className={`${project.color} text-xs`}>
+                      {project.name}
+                    </Badge>
+                  )}
+
+                  <span className="text-slate-500 text-xs flex items-center">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {getEffortIcon(task.effort)} {task.effort}
+                  </span>
+                </div>
+              </>
             )}
-
-            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-              <Badge variant="outline" className={`${getPriorityColor(task.priority)} text-xs`}>
-                {task.priority}
-              </Badge>
-
-              {project && (
-                <Badge variant="outline" className={`${project.color} text-xs`}>
-                  {project.name}
-                </Badge>
-              )}
-
-              <span className="text-slate-500 text-xs flex items-center">
-                <Clock className="w-3 h-3 mr-1" />
-                {getEffortIcon(task.effort)} {task.effort}
-              </span>
-            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant={task.status === 'completed' ? "default" : "outline"}
-              onClick={(e) => {
-                e.stopPropagation();
-                onComplete(task.id);
-              }}
-              className={`h-7 px-2 text-xs ${task.status === 'completed'
-                ? 'bg-green-600 hover:bg-green-700'
-                : 'border-slate-200 hover:border-slate-300'
-                }`}
-            >
-              <CheckCircle2 className="w-4 h-4 mr-1" />
-              {task.status === 'completed' ? 'Terugzetten' : 'Afronden'}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsExpanded(!isExpanded);
-              }}
-            >
-              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </Button>
+          <div className="flex items-center gap-1 sm:gap-2 ml-2 sm:ml-0">
+            {isEditing ? (
+              <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleEditSave}
+                  className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700"
+                >
+                  <Save className="w-4 h-4 mr-1" />
+                  <span className="hidden sm:inline">Opslaan</span>
+                  <span className="sm:hidden">✓</span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleEditCancel}
+                  className="h-7 px-2 text-xs"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  <span className="hidden sm:inline">Annuleren</span>
+                  <span className="sm:hidden">✕</span>
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                <Button
+                  size="sm"
+                  variant={task.status === 'completed' ? "default" : "outline"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onComplete(task.id);
+                  }}
+                  className={`h-7 px-2 text-xs ${task.status === 'completed'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                >
+                  <CheckCircle2 className="w-4 h-4 sm:mr-1" />
+                  <span className="hidden sm:inline">{task.status === 'completed' ? 'Terugzetten' : 'Afronden'}</span>
+                  <span className="sm:hidden">{task.status === 'completed' ? '↺' : '✓'}</span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditing(true);
+                  }}
+                  className="h-7 px-2 text-xs"
+                >
+                  <Edit className="w-4 h-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Bewerken</span>
+                  <span className="sm:hidden">✎</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(!isExpanded);
+                  }}
+                >
+                  {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -320,73 +496,79 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           <div className="flex items-center text-slate-600">
             <Calendar className="w-4 h-4 mr-1" />
             {isRescheduling ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  type="date"
-                  value={newDate.split('T')[0]}
-                  onChange={(e) => {
-                    const time = newDate.split('T')[1]?.substring(0, 5) || '09:00';
-                    setNewDate(`${e.target.value}T${time}`);
-                  }}
-                  className="h-7 text-xs w-32"
-                />
-                <Input
-                  type="time"
-                  value={newDate.split('T')[1]?.substring(0, 5) || '09:00'}
-                  onChange={(e) => {
-                    const date = newDate.split('T')[0];
-                    setNewDate(`${date}T${e.target.value}`);
-                  }}
-                  className="h-7 text-xs w-24"
-                />
-                <Button size="sm" onClick={handleRescheduleSubmit} className="h-7 px-2 text-xs">
-                  Opslaan
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setIsRescheduling(false)}
-                  className="h-7 px-2 text-xs"
-                >
-                  Annuleren
-                </Button>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Input
+                    type="date"
+                    value={newDate.split('T')[0]}
+                    onChange={(e) => {
+                      const time = newDate.split('T')[1]?.substring(0, 5) || '09:00';
+                      setNewDate(`${e.target.value}T${time}`);
+                    }}
+                    className="h-7 text-xs w-full sm:w-32"
+                  />
+                  <Input
+                    type="time"
+                    value={newDate.split('T')[1]?.substring(0, 5) || '09:00'}
+                    onChange={(e) => {
+                      const date = newDate.split('T')[0];
+                      setNewDate(`${date}T${e.target.value}`);
+                    }}
+                    className="h-7 text-xs w-full sm:w-24"
+                  />
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button size="sm" onClick={handleRescheduleSubmit} className="h-7 px-2 text-xs flex-1 sm:flex-none">
+                    Opslaan
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setIsRescheduling(false)}
+                    className="h-7 px-2 text-xs flex-1 sm:flex-none"
+                  >
+                    Annuleren
+                  </Button>
+                </div>
               </div>
-            ) : (
-              <span className="text-xs sm:text-sm">
-                {task.planned_date ? (
-                  <>
-                    <span className="text-blue-600">Gepland: {formatDate(task.planned_date)}</span>
-                    <span className="text-slate-400 ml-2">(Deadline: {formatDate(task.due_date)})</span>
-                  </>
-                ) : (
-                  formatDate(task.due_date)
-                )}
-              </span>
-            )}
+            ) : !isEditing ? (
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                <span className="text-xs sm:text-sm">
+                  {task.planned_date ? (
+                    <>
+                      <span className="text-blue-600">Gepland: {formatDate(task.planned_date)}</span>
+                      <span className="text-slate-400 block sm:inline sm:ml-2">(Deadline: {formatDate(task.due_date)})</span>
+                    </>
+                  ) : (
+                    formatDate(task.due_date)
+                  )}
+                </span>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
 
       {isExpanded && (
-        <div className="px-4 pb-4 border-t border-slate-200">
+        <div className="px-3 sm:px-4 pb-4 border-t border-slate-200">
           <div className="pt-4 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <h5 className="text-sm font-medium text-slate-700 mb-2">Details</h5>
                 <div className="space-y-2">
-                  <div className="flex items-center text-sm text-slate-600">
-                    <span className="font-medium w-24">Status:</span>
-                    <Badge variant="outline" className={`ml-2 ${task.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center text-sm text-slate-600">
+                    <span className="font-medium w-24 mb-1 sm:mb-0">Status:</span>
+                    <Badge variant="outline" className={`sm:ml-2 w-fit ${task.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
                       {task.status === 'completed' ? 'Afgerond' : 'In behandeling'}
                     </Badge>
                   </div>
-                  <div className="flex items-center text-sm text-slate-600">
-                    <span className="font-medium w-24">Prioriteit:</span>
-                    <span className="ml-2">{task.priority}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center text-sm text-slate-600">
+                    <span className="font-medium w-24 mb-1 sm:mb-0">Prioriteit:</span>
+                    <span className="sm:ml-2">{task.priority}</span>
                   </div>
-                  <div className="flex items-center text-sm text-slate-600">
-                    <span className="font-medium w-24">Inspanning:</span>
-                    <span className="ml-2">{task.effort}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center text-sm text-slate-600">
+                    <span className="font-medium w-24 mb-1 sm:mb-0">Inspanning:</span>
+                    <span className="sm:ml-2">{task.effort}</span>
                   </div>
                 </div>
               </div>
@@ -407,9 +589,30 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             {task.notes && (
               <div>
                 <h5 className="text-sm font-medium text-slate-700 mb-2">Notities</h5>
-                <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg">
-                  {task.notes}
-                </p>
+                {isEditing ? (
+                  <Textarea
+                    value={editFormData.notes}
+                    onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                    placeholder="Notities (optioneel)"
+                    className="text-sm min-h-[80px]"
+                  />
+                ) : (
+                  <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg">
+                    {task.notes}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {isEditing && !task.notes && (
+              <div>
+                <h5 className="text-sm font-medium text-slate-700 mb-2">Notities</h5>
+                <Textarea
+                  value={editFormData.notes}
+                  onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                  placeholder="Notities (optioneel)"
+                  className="text-sm min-h-[80px]"
+                />
               </div>
             )}
 
@@ -417,11 +620,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 w-full sm:w-auto"
                 onClick={() => setIsUploadDialogOpen(true)}
               >
                 <Upload className="w-4 h-4" />
-                Upload bijlage
+                <span className="hidden sm:inline">Upload bijlage</span>
+                <span className="sm:hidden">Upload bijlage</span>
               </Button>
             </div>
 

@@ -57,9 +57,13 @@ const Index = () => {
     setSelectedTask(task);
   };
 
-  const handleTaskUpload = async (type: 'file' | 'image' | 'text', content: string, analysis: string) => {
+  const handleTaskUpload = async (taskId: string, type: 'file' | 'image' | 'text', content: string, analysis: string) => {
     // Refresh the tasks data to show the new attachment
     await refetch();
+  };
+
+  const handleTaskEdit = async (taskId: string, updatedTask: Partial<Task>) => {
+    await updateTask(taskId, updatedTask);
   };
 
   // Helper to check if a date is today (date-only, UTC)
@@ -205,6 +209,7 @@ const Index = () => {
                 onReschedule={handleTaskReschedule}
                 onTaskClick={handleTaskClick}
                 onUpload={handleTaskUpload}
+                onEdit={handleTaskEdit}
               />
             </div>
           )}
