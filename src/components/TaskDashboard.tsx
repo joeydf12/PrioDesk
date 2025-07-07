@@ -25,6 +25,8 @@ interface TaskDashboardProps {
   dailyTaskCapacity?: number; // Maximum number of tasks that can be done per day
   onUpload?: (taskId: string, type: 'file' | 'image' | 'text', content: string, analysis: string) => void;
   onEdit?: (taskId: string, updatedTask: Partial<Task>) => void;
+  onAssignmentChange?: () => void;
+  canAssign?: boolean; // Whether the current user can assign tasks
 }
 
 // Priority scoring system
@@ -43,7 +45,9 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
   onTaskClick,
   dailyTaskCapacity = 7, // Default capacity of 7 tasks per day
   onUpload,
-  onEdit
+  onEdit,
+  onAssignmentChange,
+  canAssign
 }) => {
   const [selectedOverdueTasks, setSelectedOverdueTasks] = useState<string[]>([]);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -273,6 +277,8 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({
                       dailyTaskCapacity={dailyTaskCapacity}
                       onUpload={onUpload}
                       onEdit={onEdit}
+                      onAssignmentChange={onAssignmentChange}
+                      canAssign={canAssign}
                     />
                   </div>
                 </div>

@@ -366,6 +366,8 @@ const Tasks = () => {
                 onTaskStatusChange={handleTaskStatusChange}
                 onUpload={handleTaskUpload}
                 onEdit={handleTaskEdit}
+                onAssignmentChange={fetchTasks}
+                canAssign={false} // Users can only assign tasks in project context
               />
             ))
           )}

@@ -13,6 +13,7 @@ export interface Task {
   completed_at?: string;
   analysis?: string;
   attachments?: TaskAttachment[];
+  assigned_to?: string;
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +24,17 @@ export interface TaskAttachment {
   type: 'file' | 'image' | 'text';
   content: string;
   analysis?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskAssignment {
+  id: string;
+  task_id: string;
+  assigned_by: string;
+  assigned_to: string;
+  assigned_at: string;
+  notes?: string;
   created_at: string;
   updated_at: string;
 }

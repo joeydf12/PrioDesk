@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { MobileNav } from '@/components/MobileNav';
+import { TaskCard } from '@/components/TaskCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
+import { Task as TaskType, Project as ProjectType } from '@/types';
 
 interface Task {
   id: string;
@@ -73,6 +75,94 @@ const Projects = () => {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Task management functions
+  const handleTaskComplete = async (taskId: string) => {
+    try {
+      const task = projects
+        .flatMap(p => p.tasksList)
+        .find(t => t.id === taskId);
+      
+      if (task) {
+        const isCurrentlyCompleted = task.status === 'completed';
+        const newStatus = isCurrentlyCompleted ? 'pending' : 'completed';
+        const completedAt = isCurrentlyCompleted ? null : new Date().toISOString();
+        
+        const { error } = await supabase
+          .from('tasks')
+          .update({
+            status: newStatus,
+            completed_at: completedAt
+          })
+          .eq('id', taskId);
+        
+        if (error) throw error;
+        
+        await fetchProjects(); // Refresh projects to update task status
+      }
+    } catch (error) {
+      console.error('Error completing task:', error);
+      toast({
+        title: "Fout",
+        description: "Kon taak niet bijwerken.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTaskStatusChange = async (taskId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: newStatus })
+        .eq('id', taskId);
+      
+      if (error) throw error;
+      
+      await fetchProjects(); // Refresh projects to update task status
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      toast({
+        title: "Fout",
+        description: "Kon taakstatus niet bijwerken.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTaskEdit = async (taskId: string, updatedTask: Partial<TaskType>) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update(updatedTask)
+        .eq('id', taskId);
+      
+      if (error) throw error;
+      
+      await fetchProjects(); // Refresh projects to update task
+      
+      toast({
+        title: "Taak bijgewerkt",
+        description: "De taak is succesvol bijgewerkt.",
+      });
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast({
+        title: "Fout",
+        description: "Kon taak niet bijwerken.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTaskUpload = async (taskId: string, type: 'file' | 'image' | 'text', content: string, analysis: string) => {
+    // Refresh the projects data to show the new attachment
+    await fetchProjects();
+  };
+
+  const handleAssignmentChange = async () => {
+    await fetchProjects(); // Refresh projects to show updated assignments
+  };
+
   useEffect(() => {
     // Only fetch projects when user is authenticated and auth loading is complete
     if (!authLoading && user) {
@@ -109,10 +199,13 @@ const Projects = () => {
       setLoading(true);
       setError(null);
 
+      console.log('Fetching projects for user:', user.id);
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('*')
         .eq('user_id', user.id);
+      console.log('Supabase projectsData:', projectsData);
+      console.log('Supabase projectsError:', projectsError);
 
       if (projectsError) throw projectsError;
 
@@ -618,23 +711,24 @@ const Projects = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header onCreateTask={() => { }} />
 
-      <main className="container mx-auto px-4 py-8 pb-24">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-24">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <Button
               variant="ghost"
-              className="mb-4"
+              className="mb-3 sm:mb-4"
               onClick={() => navigate('/profile')}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Terug naar profiel
+              <span className="hidden sm:inline">Terug naar profiel</span>
+              <span className="sm:hidden">Terug</span>
             </Button>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Projecten</h1>
-            <p className="text-slate-600">Beheer je projecten en taken</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-1 sm:mb-2">Projecten</h1>
+            <p className="text-sm sm:text-base text-slate-600">Beheer je projecten en taken</p>
           </div>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               {loading ? (
                 <div className="text-center py-8">
                   <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -648,42 +742,48 @@ const Projects = () => {
                     onClick={() => setSelectedProject(null)}
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Terug naar projecten
+                    <span className="hidden sm:inline">Terug naar projecten</span>
+                    <span className="sm:hidden">Terug</span>
                   </Button>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-2xl font-semibold">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-xl sm:text-2xl font-semibold break-words">
                           {projects.find(p => p.id === selectedProject)?.name}
                         </h2>
-                        <p className="text-slate-600">
+                        <p className="text-sm sm:text-base text-slate-600 break-words">
                           {projects.find(p => p.id === selectedProject)?.description}
                         </p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => openEditModal(projects.find(p => p.id === selectedProject)!)}
+                          className="flex-1 sm:flex-none"
                         >
-                          <Edit className="w-4 h-4 mr-2" />
-                          Bewerken
+                          <Edit className="w-4 h-4 mr-1 sm:mr-2" />
+                          <span className="hidden sm:inline">Bewerken</span>
+                          <span className="sm:hidden">Bewerk</span>
                         </Button>
                         {user && projects.find(p => p.id === selectedProject)?.user_id === user.id && (
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => openShareModal(projects.find(p => p.id === selectedProject)!)}
+                            className="flex-1 sm:flex-none"
                           >
-                            <Share2 className="w-4 h-4 mr-2" />
-                            Delen
+                            <Share2 className="w-4 h-4 mr-1 sm:mr-2" />
+                            <span className="hidden sm:inline">Delen</span>
+                            <span className="sm:hidden">Deel</span>
                           </Button>
                         )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Verwijderen
+                            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 flex-1 sm:flex-none">
+                              <Trash2 className="w-4 h-4 mr-1 sm:mr-2" />
+                              <span className="hidden sm:inline">Verwijderen</span>
+                              <span className="sm:hidden">Verwijder</span>
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
@@ -711,25 +811,30 @@ const Projects = () => {
                         <ListTodo className="w-5 h-5" />
                         Taken
                       </h3>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {projects.find(p => p.id === selectedProject)?.tasksList.length === 0 ? (
                           <p className="text-slate-500 text-center py-4">Geen taken in dit project</p>
                         ) : (
                           projects.find(p => p.id === selectedProject)?.tasksList.map(task => (
-                            <Card key={task.id} className="p-3">
-                              <div className="flex items-center justify-between">
-                                <span>{task.title}</span>
-                                <Badge variant={
-                                  task.status === 'completed' ? 'default' :
-                                    task.status === 'in-progress' ? 'secondary' :
-                                      'outline'
-                                }>
-                                  {task.status === 'completed' ? 'Voltooid' :
-                                    task.status === 'in-progress' ? 'In uitvoering' :
-                                      'Te doen'}
-                                </Badge>
-                              </div>
-                            </Card>
+                            <TaskCard
+                              key={task.id}
+                              task={task as TaskType}
+                              projects={projects.map(p => ({
+                                id: p.id,
+                                name: p.name,
+                                description: p.description,
+                                color: p.color || 'bg-blue-100 text-blue-800',
+                                user_id: p.user_id,
+                                created_at: p.created_at,
+                                updated_at: p.updated_at
+                              }))}
+                              onComplete={handleTaskComplete}
+                              onTaskStatusChange={handleTaskStatusChange}
+                              onEdit={handleTaskEdit}
+                              onUpload={handleTaskUpload}
+                              onAssignmentChange={handleAssignmentChange}
+                              canAssign={user && projects.find(p => p.id === selectedProject)?.user_id === user.id}
+                            />
                           ))
                         )}
                       </div>
@@ -748,18 +853,18 @@ const Projects = () => {
                           ) : (
                             sharedMembers.map(member => (
                               <Card key={member.id} className="p-3">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <div>
-                                      <p className="font-medium">
+                                <div className="flex flex-row sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-sm sm:text-base break-words">
                                         {member.first_name && member.last_name 
                                           ? `${member.first_name} ${member.last_name}`
                                           : member.email
                                         }
                                       </p>
-                                      <p className="text-sm text-slate-500">{member.email}</p>
+                                      <p className="text-xs sm:text-sm text-slate-500 break-words">{member.email}</p>
                                     </div>
-                                    <Badge variant="secondary" className="text-xs">
+                                    <Badge variant="secondary" className="text-xs w-fit">
                                       {member.permission === 'edit' ? 'Bewerken' : 'Bekijken'}
                                     </Badge>
                                   </div>
@@ -768,7 +873,7 @@ const Projects = () => {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 self-end sm:self-auto"
                                       >
                                         <UserX className="w-4 h-4" />
                                       </Button>
@@ -804,7 +909,7 @@ const Projects = () => {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {projects.length === 0 ? (
                     <div className="col-span-full text-center py-8">
                       <p className="text-slate-500 mb-4">Je hebt nog geen projecten</p>
@@ -814,12 +919,12 @@ const Projects = () => {
                     projects.map(project => (
                       <Card
                         key={project.id}
-                        className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                        className="p-3 sm:p-4 hover:shadow-lg transition-shadow cursor-pointer"
                         onClick={() => setSelectedProject(project.id)}
                       >
                         <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-semibold text-lg">{project.name}</h3>
-                          <div className="flex gap-1">
+                          <h3 className="font-semibold text-base sm:text-lg break-words flex-1 min-w-0 mr-2">{project.name}</h3>
+                          <div className="flex gap-1 flex-shrink-0">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -875,33 +980,33 @@ const Projects = () => {
                             </AlertDialog>
                           </div>
                         </div>
-                        <p className="text-sm text-slate-600 mb-4">{project.description}</p>
-                        <div className="flex justify-between items-center">
-                          <Badge variant="secondary">Actief</Badge>
-                          <span className="text-sm text-slate-500">{project.tasks} taken</span>
+                        <p className="text-xs sm:text-sm text-slate-600 mb-3 sm:mb-4 break-words">{project.description}</p>
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
+                          <Badge variant="secondary" className="w-fit">Actief</Badge>
+                          <span className="text-xs sm:text-sm text-slate-500">{project.tasks} taken</span>
                         </div>
                       </Card>
                     ))
                   )}
                   <Dialog open={isCreateProjectOpen} onOpenChange={setIsCreateProjectOpen}>
                     <DialogTrigger asChild>
-                      <Card className="p-4 border-2 border-dashed hover:border-blue-500 transition-colors cursor-pointer flex items-center justify-center">
+                      <Card className="p-3 sm:p-4 border-2 border-dashed hover:border-blue-500 transition-colors cursor-pointer flex items-center justify-center">
                         <div className="text-center">
-                          <Plus className="w-8 h-8 mx-auto mb-2 text-slate-400" />
-                          <p className="text-slate-600">Nieuw project</p>
+                          <Plus className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-slate-400" />
+                          <p className="text-sm sm:text-base text-slate-600">Nieuw project</p>
                         </div>
                       </Card>
                     </DialogTrigger>
-                    <DialogContent className="bg-white">
+                    <DialogContent className="bg-white max-w-sm sm:max-w-md mx-4">
                       <DialogHeader>
-                        <DialogTitle>Nieuw Project</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="text-lg sm:text-xl">Nieuw Project</DialogTitle>
+                        <DialogDescription className="text-sm sm:text-base">
                           Maak een nieuw project aan om je taken te organiseren.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label htmlFor="projectName">Project naam</Label>
+                          <Label htmlFor="projectName" className="text-sm sm:text-base">Project naam</Label>
                           <Input 
                             id="projectName" 
                             placeholder="Voer project naam in" 
@@ -912,10 +1017,11 @@ const Projects = () => {
                                 handleCreateProject();
                               }
                             }}
+                            className="text-sm sm:text-base"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="projectDescription">Beschrijving</Label>
+                          <Label htmlFor="projectDescription" className="text-sm sm:text-base">Beschrijving</Label>
                           <Input 
                             id="projectDescription" 
                             placeholder="Voer project beschrijving in" 
@@ -926,6 +1032,7 @@ const Projects = () => {
                                 handleCreateProject();
                               }
                             }}
+                            className="text-sm sm:text-base"
                           />
                         </div>
                         <Button
@@ -947,16 +1054,16 @@ const Projects = () => {
 
       {/* Edit Project Dialog */}
       <Dialog open={isEditProjectOpen} onOpenChange={setIsEditProjectOpen}>
-        <DialogContent className="bg-white">
+        <DialogContent className="bg-white max-w-sm sm:max-w-md mx-4">
           <DialogHeader>
-            <DialogTitle>Project Bewerken</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg sm:text-xl">Project Bewerken</DialogTitle>
+            <DialogDescription className="text-sm sm:text-base">
               Bewerk de details van je project.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="editProjectName">Project naam</Label>
+              <Label htmlFor="editProjectName" className="text-sm sm:text-base">Project naam</Label>
               <Input 
                 id="editProjectName" 
                 placeholder="Voer project naam in" 
@@ -967,10 +1074,11 @@ const Projects = () => {
                     handleEditProject();
                   }
                 }}
+                className="text-sm sm:text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="editProjectDescription">Beschrijving</Label>
+              <Label htmlFor="editProjectDescription" className="text-sm sm:text-base">Beschrijving</Label>
               <Input 
                 id="editProjectDescription" 
                 placeholder="Voer project beschrijving in" 
@@ -981,6 +1089,7 @@ const Projects = () => {
                     handleEditProject();
                   }
                 }}
+                className="text-sm sm:text-base"
               />
             </div>
             <Button
@@ -996,20 +1105,20 @@ const Projects = () => {
 
       {/* Share Project Dialog */}
       <Dialog open={isShareProjectOpen} onOpenChange={setIsShareProjectOpen}>
-        <DialogContent className="bg-white">
+        <DialogContent className="bg-white max-w-sm sm:max-w-md mx-4">
           <DialogHeader>
-            <DialogTitle>Project Delen</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg sm:text-xl">Project Delen</DialogTitle>
+            <DialogDescription className="text-sm sm:text-base">
               Deel je project met andere gebruikers door hun e-mailadres in te voeren.
               <br />
-              <span className="text-sm text-amber-600 mt-2 block">
+              <span className="text-xs sm:text-sm text-amber-600 mt-2 block">
                 ⚠️ De ontvanger moet een account hebben in dit systeem.
               </span>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="shareEmail">E-mailadres</Label>
+              <Label htmlFor="shareEmail" className="text-sm sm:text-base">E-mailadres</Label>
               <Input 
                 id="shareEmail" 
                 type="email"
@@ -1021,27 +1130,28 @@ const Projects = () => {
                     handleShareProject();
                   }
                 }}
+                className="text-sm sm:text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sharePermission">Toestemming</Label>
+              <Label htmlFor="sharePermission" className="text-sm sm:text-base">Toestemming</Label>
               <select
                 id="sharePermission"
                 value={sharePermission}
                 onChange={(e) => setSharePermission(e.target.value as 'view' | 'edit')}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               >
                 <option value="view">Alleen bekijken</option>
                 <option value="edit">Bekijken en bewerken</option>
               </select>
             </div>
             <div className="space-y-2">
-              <Label>Directe link</Label>
-              <div className="flex gap-2">
+              <Label className="text-sm sm:text-base">Directe link</Label>
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input 
                   value={sharingProject ? `${window.location.origin}/projects/${sharingProject.id}` : ''}
                   readOnly
-                  className="flex-1"
+                  className="flex-1 text-xs sm:text-sm"
                 />
                 <Button
                   variant="outline"

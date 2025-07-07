@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Task, Project } from '@/types';
-import { Calendar, Clock, ChevronRight, Sparkles, CheckCircle2, Upload, ChevronDown, ChevronUp, FileText, Image, MessageSquare, Edit, Save, X } from 'lucide-react';
+import { Calendar, Clock, ChevronRight, Sparkles, CheckCircle2, Upload, ChevronDown, ChevronUp, FileText, Image, MessageSquare, Edit, Save, X, User, UserCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { TaskUploadDialog } from './TaskUploadDialog';
+import { TaskAssignmentModal } from './TaskAssignmentModal';
+import { supabase } from '@/lib/supabase';
 
 interface TaskCardProps {
   task: Task;
@@ -25,6 +27,8 @@ interface TaskCardProps {
   onSelect?: (taskId: string) => void;
   onUpload?: (taskId: string, type: 'file' | 'image' | 'text', content: string, analysis: string) => void;
   onEdit?: (taskId: string, updatedTask: Partial<Task>) => void;
+  onAssignmentChange?: () => void;
+  canAssign?: boolean; // Whether the current user can assign tasks
 }
 
 // Priority scoring system
@@ -49,6 +53,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onSelect,
   onUpload,
   onEdit,
+  onAssignmentChange,
+  canAssign,
 }) => {
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [newDate, setNewDate] = useState(task.due_date);
@@ -57,6 +63,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+  const [assignedUser, setAssignedUser] = useState<{ name: string; email: string } | null>(null);
   const [editFormData, setEditFormData] = useState({
     title: task.title,
     description: task.description || '',
@@ -69,6 +77,41 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const { toast } = useToast();
 
   const project = projects.find(p => p.id === task.project_id);
+
+  // Fetch assigned user information
+  useEffect(() => {
+    if (task.assigned_to) {
+      fetchAssignedUser();
+    } else {
+      setAssignedUser(null);
+    }
+  }, [task.assigned_to]);
+
+  const fetchAssignedUser = async () => {
+    if (!task.assigned_to) return;
+
+    try {
+      const { data: userData, error } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email')
+        .eq('id', task.assigned_to)
+        .single();
+
+      if (error) throw error;
+
+      const name = userData.first_name && userData.last_name 
+        ? `${userData.first_name} ${userData.last_name}`
+        : userData.email;
+
+      setAssignedUser({
+        name,
+        email: userData.email || ''
+      });
+    } catch (error) {
+      console.error('Error fetching assigned user:', error);
+      setAssignedUser(null);
+    }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -417,6 +460,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     <Clock className="w-3 h-3 mr-1" />
                     {getEffortIcon(task.effort)} {task.effort}
                   </span>
+
+                  {assignedUser && (
+                    <span className="text-blue-600 text-xs flex items-center">
+                      <User className="w-3 h-3 mr-1" />
+                      {assignedUser.name}
+                    </span>
+                  )}
                 </div>
               </>
             )}
@@ -476,6 +526,21 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                   <span className="hidden sm:inline">Bewerken</span>
                   <span className="sm:hidden">✎</span>
                 </Button>
+                {canAssign && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsAssignmentModalOpen(true);
+                    }}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <UserCheck className="w-4 h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Toewijzen</span>
+                    <span className="sm:hidden">👤</span>
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -686,6 +751,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         onClose={() => setIsUploadDialogOpen(false)}
         onUpload={handleUpload}
         taskId={task.id}
+      />
+
+      <TaskAssignmentModal
+        isOpen={isAssignmentModalOpen}
+        onClose={() => setIsAssignmentModalOpen(false)}
+        task={task}
+        project={project || null}
+        onAssignmentChange={onAssignmentChange || (() => {})}
       />
     </Card>
   );
